@@ -1,0 +1,23 @@
+{
+  "name": "hardhat-probe",
+  "version": "1.0.0",
+  "description": "Hardhat project to test Arbitrum precompiles and transaction types",
+  "scripts": {
+    "test": "npx hardhat test",
+    "probe-0x7e": "node scripts/probe-0x7e.js"
+  },
+  "dependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.0",
+    "@nomiclabs/hardhat-waffle": "^2.0.0",
+    "chai": "^4.3.4",
+    "ethers": "^5.7.0",
+    "hardhat": "^2.10.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.7.4"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.3.0",
+    "@types/mocha": "^9.1.1",
+    "@types/node": "^16.11.7"
+  }
+}
