@@ -39,7 +39,7 @@ Milestone 1 deliverables have been completed and are ready for review. All speci
    - Transaction type 0x7e envelope format and execution semantics
    - Method selectors and implementation priorities
 
-5. **Probe Files** (Optional)
+5. **Probe Files**
    - **Hardhat Probes** (`probes/hardhat/`)
      - `test-arbsys-calls.js` - Tests ArbSys precompile functionality
      - `test-arbgasinfo.js` - Tests ArbGasInfo precompile functionality
