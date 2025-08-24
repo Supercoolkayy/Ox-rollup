@@ -83,9 +83,11 @@ export class ArbGasInfoHandler implements PrecompileHandler {
           throw new Error(`Unknown function selector: 0x${selectorHex}`);
       }
     } catch (error) {
-      throw new Error(`Handler execution failed: ${
-        error instanceof Error ? error.message : String(error)
-      }`);
+      throw new Error(
+        `Handler execution failed: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
     }
   }
 
@@ -228,7 +230,9 @@ export class ArbGasInfoHandler implements PrecompileHandler {
   }
 
   // Legacy handlers for backward compatibility
-  private handleGetPricesInWeiLegacy(context: ExecutionContext): PrecompileResult {
+  private handleGetPricesInWeiLegacy(
+    context: ExecutionContext
+  ): PrecompileResult {
     // Return 5-tuple: (l2BaseFee, l1CalldataCost, l1StorageCost, baseL2GasPrice, congestionFee)
     const data = new Uint8Array(160); // 5 * 32 bytes
     const view = new DataView(data.buffer);
@@ -298,7 +302,9 @@ export class ArbGasInfoHandler implements PrecompileHandler {
     };
   }
 
-  private handleGetPricesInArbGasLegacy(context: ExecutionContext): PrecompileResult {
+  private handleGetPricesInArbGasLegacy(
+    context: ExecutionContext
+  ): PrecompileResult {
     // Return 3-tuple: (l2BaseFee, l1CalldataCost, l1StorageCost) in ArbGas units
     const data = new Uint8Array(96); // 3 * 32 bytes
     const view = new DataView(data.buffer);

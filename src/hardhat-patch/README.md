@@ -31,10 +31,10 @@ const config: HardhatUserConfig = {
       arbitrum: {
         enabled: true,
         chainId: 42161, // Arbitrum One
-        arbOSVersion: 20
-      }
-    }
-  }
+        arbOSVersion: 20,
+      },
+    },
+  },
 };
 
 export default config;
@@ -56,36 +56,39 @@ const config: HardhatUserConfig = {
           l2BaseFee: BigInt(2e9), // 2 gwei
           l1CalldataCost: BigInt(20), // 20 gas per byte
           l1StorageCost: BigInt(0),
-          congestionFee: BigInt(1e8) // 0.1 gwei
-        }
-      }
-    }
-  }
+          congestionFee: BigInt(1e8), // 0.1 gwei
+        },
+      },
+    },
+  },
 };
 ```
 
 ### Programmatic Usage
 
 ```typescript
-import { HardhatArbitrumPatch } from '@arbitrum/hardhat-patch';
+import { HardhatArbitrumPatch } from "@arbitrum/hardhat-patch";
 
 // Create plugin instance
 const arbitrumPatch = new HardhatArbitrumPatch({
   chainId: 42161,
-  arbOSVersion: 20
+  arbOSVersion: 20,
 });
 
 // Access the registry
 const registry = arbitrumPatch.getRegistry();
 
 // Check if a precompile is supported
-if (arbitrumPatch.hasHandler('0x0000000000000000000000000000000000000064')) {
-  console.log('ArbSys precompile is available');
+if (arbitrumPatch.hasHandler("0x0000000000000000000000000000000000000064")) {
+  console.log("ArbSys precompile is available");
 }
 
 // List all handlers
 const handlers = arbitrumPatch.listHandlers();
-console.log('Available precompiles:', handlers.map(h => h.name));
+console.log(
+  "Available precompiles:",
+  handlers.map((h) => h.name)
+);
 ```
 
 ## Supported Precompiles

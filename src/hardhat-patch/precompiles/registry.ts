@@ -15,9 +15,9 @@ export type PrecompileContext = {
 };
 
 export interface PrecompileHandler {
-  address: string;  // e.g., 0x000...064
-  name: string;            // "ArbSys" | "ArbGasInfo" | ...
-  tags: string[];          // ["arbitrum","precompile"]
+  address: string; // e.g., 0x000...064
+  name: string; // "ArbSys" | "ArbGasInfo" | ...
+  tags: string[]; // ["arbitrum","precompile"]
   handleCall(calldata: Uint8Array, ctx: PrecompileContext): Promise<Uint8Array>;
 }
 
@@ -89,14 +89,14 @@ export interface LegacyPrecompileRegistry {
 /**
  * Implementation of the precompile registry
  */
-export class HardhatPrecompileRegistry implements PrecompileRegistry, LegacyPrecompileRegistry {
+export class HardhatPrecompileRegistry
+  implements PrecompileRegistry, LegacyPrecompileRegistry
+{
   private handlers: Map<string, PrecompileHandler> = new Map();
 
   register(h: PrecompileHandler): void {
     if (this.handlers.has(h.address)) {
-      throw new Error(
-        `Handler already registered for address ${h.address}`
-      );
+      throw new Error(`Handler already registered for address ${h.address}`);
     }
 
     this.handlers.set(h.address, h);
@@ -153,7 +153,7 @@ export class HardhatPrecompileRegistry implements PrecompileRegistry, LegacyPrec
       };
 
       const result = await handler.handleCall(calldata, precompileContext);
-      
+
       // Convert Uint8Array result to PrecompileResult
       return {
         success: true,

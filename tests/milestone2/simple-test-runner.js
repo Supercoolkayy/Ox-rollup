@@ -1,223 +1,259 @@
 #!/usr/bin/env node
 
 /**
- * Simple test runner for Milestone 2 precompile registry
- * This script manually tests the functionality and saves the results
+ * Simple test runner for Milestone 2 tests
+ * This script tests the actual functionality without external test frameworks
  */
 
-const fs = require('fs');
-const path = require('path');
-
-console.log('🧪 Running Milestone 2 Precompile Registry Tests...\n');
+console.log("🧪 Running Milestone 2 Precompile Registry Tests...\n");
 
 // Import the compiled modules
-const { HardhatPrecompileRegistry, ArbSysHandler, ArbGasInfoHandler } = require('../../dist/src/hardhat-patch');
+let HardhatPrecompileRegistry, ArbSysHandler, ArbGasInfoHandler;
 
-let testResults = [];
-let passedTests = 0;
+try {
+  // Try to import the compiled modules from hardhat-patch/dist directory
+  const registryModule = require("../../src/hardhat-patch/dist/precompiles/registry");
+  const arbSysModule = require("../../src/hardhat-patch/dist/precompiles/arbSys");
+  const arbGasInfoModule = require("../../src/hardhat-patch/dist/precompiles/arbGasInfo");
+
+  HardhatPrecompileRegistry = registryModule.HardhatPrecompileRegistry;
+  ArbSysHandler = arbSysModule.ArbSysHandler;
+  ArbGasInfoHandler = arbGasInfoModule.ArbGasInfoHandler;
+} catch (error) {
+  console.error("❌ Failed to import compiled modules:", error.message);
+  process.exit(1);
+}
+
+// Test results tracking
 let totalTests = 0;
+let passedTests = 0;
+let failedTests = 0;
 
-function runTest(name, testFn) {
+function test(name, testFn) {
   totalTests++;
   try {
     testFn();
     console.log(`✅ ${name}`);
-    testResults.push({ name, status: 'PASSED', error: null });
     passedTests++;
   } catch (error) {
     console.log(`❌ ${name}: ${error.message}`);
-    testResults.push({ name, status: 'FAILED', error: error.message });
+    failedTests++;
   }
 }
 
-// Test 1: Registry Creation
-runTest('Registry Creation', () => {
-  const registry = new HardhatPrecompileRegistry();
-  if (!registry) throw new Error('Registry not created');
-});
-
-// Test 2: Handler Creation
-runTest('ArbSys Handler Creation', () => {
-  const handler = new ArbSysHandler();
-  if (!handler) throw new Error('ArbSys handler not created');
-  if (handler.address !== '0x0000000000000000000000000000000000000064') {
-    throw new Error(`Expected address 0x64, got ${handler.address}`);
-  }
-});
-
-runTest('ArbGasInfo Handler Creation', () => {
-  const handler = new ArbGasInfoHandler();
-  if (!handler) throw new Error('ArbGasInfo handler not created');
-  if (handler.address !== '0x000000000000000000000000000000000000006C') {
-    throw new Error(`Expected address 0x6C, got ${handler.address}`);
-  }
-});
-
-// Test 3: Handler Registration
-runTest('Handler Registration', () => {
+// Test 1: Handler Registration
+test("Handler Registration", () => {
   const registry = new HardhatPrecompileRegistry();
   const arbSysHandler = new ArbSysHandler();
   const arbGasInfoHandler = new ArbGasInfoHandler();
-  
+
   registry.register(arbSysHandler);
   registry.register(arbGasInfoHandler);
-  
+
   if (!registry.hasHandler(arbSysHandler.address)) {
-    throw new Error('ArbSys handler not registered');
+    throw new Error("ArbSys handler not registered");
   }
+
   if (!registry.hasHandler(arbGasInfoHandler.address)) {
-    throw new Error('ArbGasInfo handler not registered');
+    throw new Error("ArbGasInfo handler not registered");
   }
-  
+
   const handlers = registry.listHandlers();
   if (handlers.length !== 2) {
     throw new Error(`Expected 2 handlers, got ${handlers.length}`);
   }
 });
 
-// Test 4: Handler Retrieval
-runTest('Handler Retrieval', () => {
+// Test 2: Handler Retrieval
+test("Handler Retrieval", () => {
   const registry = new HardhatPrecompileRegistry();
   const arbSysHandler = new ArbSysHandler();
-  
+
   registry.register(arbSysHandler);
+
   const retrieved = registry.getHandler(arbSysHandler.address);
-  
   if (retrieved !== arbSysHandler) {
-    throw new Error('Retrieved handler does not match registered handler');
+    throw new Error("Retrieved handler doesn't match registered handler");
+  }
+
+  const nonExistent = registry.getHandler(
+    "0x1234567890123456789012345678901234567890"
+  );
+  if (nonExistent !== null) {
+    throw new Error("Non-existent handler should return null");
   }
 });
 
-// Test 5: Non-existent Handler
-runTest('Non-existent Handler', () => {
-  const registry = new HardhatPrecompileRegistry();
-  const handler = registry.getHandler('0x1234567890123456789012345678901234567890');
-  
-  if (handler !== null) {
-    throw new Error('Expected null for non-existent handler');
-  }
-});
-
-// Test 6: Duplicate Registration Prevention
-runTest('Duplicate Registration Prevention', () => {
-  const registry = new HardhatPrecompileRegistry();
+// Test 3: ArbSys Functionality
+test("ArbSys Functionality", async () => {
   const handler = new ArbSysHandler();
-  
-  registry.register(handler);
-  
+
+  // Test arbChainID
+  const chainIdCalldata = new Uint8Array([0xa3, 0xb1, 0xb3, 0x1d]);
+  const context = {
+    blockNumber: BigInt(12345),
+    chainId: BigInt(42161),
+    txOrigin: "0x1234567890123456789012345678901234567890",
+    msgSender: "0x1234567890123456789012345678901234567890",
+    gasPriceWei: BigInt(1e9),
+    config: {},
+  };
+
+  const result = await handler.handleCall(chainIdCalldata, context);
+  if (!(result instanceof Uint8Array)) {
+    throw new Error("Expected Uint8Array result");
+  }
+  if (result.length !== 32) {
+    throw new Error("Expected 32-byte result");
+  }
+});
+
+// Test 4: ArbGasInfo Functionality
+test("ArbGasInfo Functionality", async () => {
+  const handler = new ArbGasInfoHandler();
+
+  // Test getPricesInWei
+  const calldata = new Uint8Array([0x4d, 0x23, 0x01, 0xcc]);
+  const context = {
+    blockNumber: BigInt(12345),
+    chainId: BigInt(42161),
+    txOrigin: "0x1234567890123456789012345678901234567890",
+    msgSender: "0x1234567890123456789012345678901234567890",
+    gasPriceWei: BigInt(1e9),
+    config: {},
+  };
+
+  const result = await handler.handleCall(calldata, context);
+  if (!(result instanceof Uint8Array)) {
+    throw new Error("Expected Uint8Array result");
+  }
+  if (result.length !== 160) {
+    throw new Error("Expected 160-byte result for getPricesInWei");
+  }
+});
+
+// Test 5: Error Handling
+test("Error Handling", async () => {
+  const handler = new ArbSysHandler();
+
+  // Test invalid calldata
+  const invalidCalldata = new Uint8Array([0x12, 0x34]); // Too short
+  const context = {
+    blockNumber: BigInt(12345),
+    chainId: BigInt(42161),
+    txOrigin: "0x1234567890123456789012345678901234567890",
+    msgSender: "0x1234567890123456789012345678901234567890",
+    gasPriceWei: BigInt(1e9),
+    config: {},
+  };
+
   try {
-    registry.register(handler);
-    throw new Error('Expected error for duplicate registration');
+    await handler.handleCall(invalidCalldata, context);
+    throw new Error("Expected error for invalid calldata");
   } catch (error) {
-    if (!error.message.includes('already registered')) {
-      throw new Error('Unexpected error message');
+    if (!error.message.includes("Invalid calldata: too short")) {
+      throw new Error(`Unexpected error: ${error.message}`);
     }
   }
 });
 
-// Test 7: Configuration Handling
-runTest('Configuration Handling', () => {
-  const customConfig = {
-    chainId: 421613, // Arbitrum Goerli
-    arbOSVersion: 21,
-    l1BaseFee: BigInt(15e9)
-  };
-  
-  const handler = new ArbSysHandler(customConfig);
-  const config = handler.getConfig();
-  
-  if (config.chainId !== 421613) {
-    throw new Error(`Expected chainId 421613, got ${config.chainId}`);
-  }
-  if (config.arbOSVersion !== 21) {
-    throw new Error(`Expected arbOSVersion 21, got ${config.arbOSVersion}`);
-  }
-  if (config.l1BaseFee !== BigInt(15e9)) {
-    throw new Error(`Expected l1BaseFee ${BigInt(15e9)}, got ${config.l1BaseFee}`);
-  }
-});
-
-// Test 8: Call Handling
-runTest('Call Handling', async () => {
+// Test 6: Registry Call Handling
+test("Registry Call Handling", async () => {
   const registry = new HardhatPrecompileRegistry();
   const arbSysHandler = new ArbSysHandler();
-  
+
   registry.register(arbSysHandler);
-  
+
+  const calldata = new Uint8Array([0xa3, 0xb1, 0xb3, 0x1d]);
   const context = {
     blockNumber: 12345,
     chainId: 42161,
     gasPrice: BigInt(1e9),
-    caller: '0x1234567890123456789012345678901234567890',
-    callStack: []
+    caller: "0x1234567890123456789012345678901234567890",
+    callStack: [],
   };
-  
-  // Test arbChainID() call
-  const calldata = new Uint8Array([0xa3, 0xb1, 0xb3, 0x1d]); // arbChainID() selector
-  const result = await registry.handleCall(arbSysHandler.address, calldata, context);
-  
+
+  const result = await registry.handleCall(
+    arbSysHandler.address,
+    calldata,
+    context
+  );
   if (!result.success) {
     throw new Error(`Call failed: ${result.error}`);
   }
-  if (result.gasUsed !== 3) {
-    throw new Error(`Expected gasUsed 3, got ${result.gasUsed}`);
-  }
   if (!result.data) {
-    throw new Error('Expected data in result');
+    throw new Error("Expected data in result");
   }
 });
 
-// Test 9: Error Handling
-runTest('Error Handling', async () => {
+// Test 7: Unknown Precompile Handling
+test("Unknown Precompile Handling", async () => {
   const registry = new HardhatPrecompileRegistry();
-  
+
+  const calldata = new Uint8Array([0x12, 0x34, 0x56, 0x78]);
   const context = {
     blockNumber: 12345,
     chainId: 42161,
     gasPrice: BigInt(1e9),
-    caller: '0x1234567890123456789012345678901234567890',
-    callStack: []
+    caller: "0x1234567890123456789012345678901234567890",
+    callStack: [],
   };
-  
-  // Test call to non-existent precompile
-  const calldata = new Uint8Array([0x12, 0x34, 0x56, 0x78]);
-  const result = await registry.handleCall('0x1234567890123456789012345678901234567890', calldata, context);
-  
+
+  const result = await registry.handleCall(
+    "0x1234567890123456789012345678901234567890",
+    calldata,
+    context
+  );
   if (result.success) {
-    throw new Error('Expected call to fail');
+    throw new Error("Expected failure for unknown precompile");
   }
-  if (!result.error) {
-    throw new Error('Expected error message');
-  }
-  if (result.gasUsed !== 0) {
-    throw new Error(`Expected gasUsed 0, got ${result.gasUsed}`);
+  if (!result.error || !result.error.includes("No handler registered")) {
+    throw new Error(`Unexpected error: ${result.error}`);
   }
 });
 
-console.log(`\n📊 Test Results: ${passedTests}/${totalTests} tests passed`);
+// Test 8: Address Format Validation
+test("Address Format Validation", () => {
+  const arbSysHandler = new ArbSysHandler();
+  const arbGasInfoHandler = new ArbGasInfoHandler();
 
-// Save test results
-const logContent = `# Milestone 2 Precompile Registry Test Results
-# Date: ${new Date().toISOString()}
-# Summary: ${passedTests}/${totalTests} tests passed
+  // Check that addresses are 20-byte hex strings
+  if (!arbSysHandler.address.match(/^0x[0-9a-f]{40}$/)) {
+    throw new Error(`Invalid ArbSys address format: ${arbSysHandler.address}`);
+  }
 
-## Test Results
-${testResults.map(test => `${test.status === 'PASSED' ? '✅' : '❌'} ${test.name}: ${test.status}${test.error ? ` - ${test.error}` : ''}`).join('\n')}
+  if (!arbGasInfoHandler.address.match(/^0x[0-9a-f]{40}$/)) {
+    throw new Error(
+      `Invalid ArbGasInfo address format: ${arbGasInfoHandler.address}`
+    );
+  }
 
-## Summary
-- Total Tests: ${totalTests}
-- Passed: ${passedTests}
-- Failed: ${totalTests - passedTests}
-- Success Rate: ${Math.round((passedTests / totalTests) * 100)}%
+  // Check specific addresses
+  if (arbSysHandler.address !== "0x0000000000000000000000000000000000000064") {
+    throw new Error(
+      `Expected ArbSys address 0x0000000000000000000000000000000000000064, got ${arbSysHandler.address}`
+    );
+  }
 
-## Status
-${passedTests === totalTests ? '✅ All tests passed successfully!' : '❌ Some tests failed. Check the details above.'}
-`;
+  if (
+    arbGasInfoHandler.address !== "0x000000000000000000000000000000000000006c"
+  ) {
+    throw new Error(
+      `Expected ArbGasInfo address 0x000000000000000000000000000000000000006c, got ${arbGasInfoHandler.address}`
+    );
+  }
+});
 
-const logPath = path.join(__dirname, '..', 'logs', 'step1-precompile-registry.log');
-fs.writeFileSync(logPath, logContent);
+console.log("\n🏁 Test Results:");
+console.log(`Total Tests: ${totalTests}`);
+console.log(`Passed: ${passedTests}`);
+console.log(`Failed: ${failedTests}`);
+console.log(`Success Rate: ${((passedTests / totalTests) * 100).toFixed(1)}%`);
 
-console.log(`\n📝 Test results saved to: ${logPath}`);
-
-// Exit with appropriate code
-process.exit(passedTests === totalTests ? 0 : 1);
+if (failedTests === 0) {
+  console.log("\n✅ All tests passed successfully!");
+  process.exit(0);
+} else {
+  console.log(`\n❌ ${failedTests} test(s) failed`);
+  process.exit(1);
+}

@@ -83,9 +83,11 @@ export class ArbSysHandler implements PrecompileHandler {
           throw new Error(`Unknown function selector: 0x${selectorHex}`);
       }
     } catch (error) {
-      throw new Error(`Handler execution failed: ${
-        error instanceof Error ? error.message : String(error)
-      }`);
+      throw new Error(
+        `Handler execution failed: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
     }
   }
 
@@ -182,7 +184,9 @@ export class ArbSysHandler implements PrecompileHandler {
     };
   }
 
-  private handleArbBlockNumberLegacy(context: ExecutionContext): PrecompileResult {
+  private handleArbBlockNumberLegacy(
+    context: ExecutionContext
+  ): PrecompileResult {
     return {
       success: true,
       data: this.encodeUint256(context.blockNumber),
@@ -215,7 +219,9 @@ export class ArbSysHandler implements PrecompileHandler {
     };
   }
 
-  private handleArbOSVersionLegacy(context: ExecutionContext): PrecompileResult {
+  private handleArbOSVersionLegacy(
+    context: ExecutionContext
+  ): PrecompileResult {
     return {
       success: true,
       data: this.encodeUint256(this.config.arbOSVersion),
