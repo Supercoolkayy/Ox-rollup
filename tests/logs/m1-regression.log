@@ -1,0 +1,52 @@
+# Milestone 1 Regression Test Results
+# Date: $(date)
+# Branch: feat/m2-core-patch
+
+## Test Summary
+All tests PASSED as expected on unpatched Hardhat nodes.
+
+## Test Results
+
+### ArbProbes Contract Tests
+- getArbChainId(): CALL_EXCEPTION with empty data (0x) - EXPECTED
+- getArbBlockNumber(): CALL_EXCEPTION with empty data (0x) - EXPECTED  
+- getCurrentTxL1GasFees(): CALL_EXCEPTION with empty data (0x) - EXPECTED
+
+## Test Details
+
+### getArbChainId Test
+- Status: PASSED
+- Expected: Should revert or return zero for getArbChainId on unpatched nodes
+- Actual: CALL_EXCEPTION with empty data (0x)
+- Address: 0x5FbDB2315678afecb367f032d93F642f64180aa3
+- Method: getArbChainId()
+- Data: 0xecb93453
+
+### getArbBlockNumber Test  
+- Status: PASSED
+- Expected: Should revert or return zero for getArbBlockNumber on unpatched nodes
+- Actual: CALL_EXCEPTION with empty data (0x)
+- Address: 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
+- Method: getArbBlockNumber()
+- Data: 0xdd848c6b
+
+### getCurrentTxL1GasFees Test
+- Status: PASSED
+- Expected: Should revert or return zero for getCurrentTxL1GasFees on unpatched nodes
+- Actual: CALL_EXCEPTION with empty data (0x)
+- Address: 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
+- Method: getCurrentTxL1GasFees()
+- Data: 0xc6f7de0e
+
+## Conclusion
+All Milestone 1 tests are working correctly and confirm that:
+1. Arbitrum precompiles are NOT supported on unpatched Hardhat nodes
+2. All calls return CALL_EXCEPTION with empty data as expected
+3. The test framework is properly set up for Milestone 2 development
+
+## Next Steps
+Ready to proceed with Milestone 2 implementation:
+- Implement ArbSys precompile emulator (0x64)
+- Implement ArbGasInfo precompile emulator (0x6C)  
+- Add transaction type 0x7e support
+- Create Hardhat plugin and Anvil wrapper
