@@ -16,7 +16,7 @@ import {
 } from "./registry";
 
 export class ArbSysHandler implements PrecompileHandler {
-  public readonly address = "0x0000000000000000000000000000000000000064" as 0x${string};
+  public readonly address = "0x0000000000000000000000000000000000000064";
   public readonly name = "ArbSys";
   public readonly tags = ["arbitrum", "precompile"];
 
@@ -233,6 +233,3 @@ export class ArbSysHandler implements PrecompileHandler {
     return new Uint8Array(buffer);
   }
 }
-
-// Export constant for the required interface
-export const ArbSysHandler: PrecompileHandler = new ArbSysHandler();

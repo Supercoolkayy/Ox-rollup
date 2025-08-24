@@ -8,14 +8,14 @@
 export type PrecompileContext = {
   blockNumber: bigint;
   chainId: bigint;
-  txOrigin: 0x${string};
-  msgSender: 0x${string};
+  txOrigin: string; // 0x-prefixed hex address
+  msgSender: string; // 0x-prefixed hex address
   gasPriceWei: bigint;
   config: Record<string, unknown>;
 };
 
 export interface PrecompileHandler {
-  address: 0x${string};  // e.g., 0x000...064
+  address: string;  // e.g., 0x000...064
   name: string;            // "ArbSys" | "ArbGasInfo" | ...
   tags: string[];          // ["arbitrum","precompile"]
   handleCall(calldata: Uint8Array, ctx: PrecompileContext): Promise<Uint8Array>;
@@ -23,7 +23,7 @@ export interface PrecompileHandler {
 
 export interface PrecompileRegistry {
   register(h: PrecompileHandler): void;
-  getByAddress(addr: 0x${string}): PrecompileHandler | undefined;
+  getByAddress(addr: string): PrecompileHandler | undefined;
   list(): PrecompileHandler[];
 }
 
@@ -102,7 +102,7 @@ export class HardhatPrecompileRegistry implements PrecompileRegistry, LegacyPrec
     this.handlers.set(h.address, h);
   }
 
-  getByAddress(addr: 0x${string}): PrecompileHandler | undefined {
+  getByAddress(addr: string): PrecompileHandler | undefined {
     return this.handlers.get(addr);
   }
 
@@ -146,8 +146,8 @@ export class HardhatPrecompileRegistry implements PrecompileRegistry, LegacyPrec
       const precompileContext: PrecompileContext = {
         blockNumber: BigInt(context.blockNumber),
         chainId: BigInt(context.chainId),
-        txOrigin: context.caller as 0x${string},
-        msgSender: context.caller as 0x${string},
+        txOrigin: context.caller,
+        msgSender: context.caller,
         gasPriceWei: context.gasPrice,
         config: {},
       };
