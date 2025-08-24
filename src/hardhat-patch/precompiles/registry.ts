@@ -1,10 +1,33 @@
 /**
  * Precompile Registry Interface
- * 
+ *
  * This module provides the core interface for managing Arbitrum precompiles
  * in the Hardhat Network environment.
  */
 
+export type PrecompileContext = {
+  blockNumber: bigint;
+  chainId: bigint;
+  txOrigin: 0x${string};
+  msgSender: 0x${string};
+  gasPriceWei: bigint;
+  config: Record<string, unknown>;
+};
+
+export interface PrecompileHandler {
+  address: 0x${string};  // e.g., 0x000...064
+  name: string;            // "ArbSys" | "ArbGasInfo" | ...
+  tags: string[];          // ["arbitrum","precompile"]
+  handleCall(calldata: Uint8Array, ctx: PrecompileContext): Promise<Uint8Array>;
+}
+
+export interface PrecompileRegistry {
+  register(h: PrecompileHandler): void;
+  getByAddress(addr: 0x${string}): PrecompileHandler | undefined;
+  list(): PrecompileHandler[];
+}
+
+// Legacy interfaces for backward compatibility
 export interface ExecutionContext {
   blockNumber: number;
   chainId: number;
@@ -17,7 +40,7 @@ export interface ExecutionContext {
 export interface L1Context {
   baseFee: bigint;
   gasPriceEstimate: bigint;
-  feeModel: 'static' | 'dynamic';
+  feeModel: "static" | "dynamic";
 }
 
 export interface PrecompileResult {
@@ -25,17 +48,6 @@ export interface PrecompileResult {
   data?: Uint8Array;
   gasUsed: number;
   error?: string;
-}
-
-export interface PrecompileHandler {
-  address: string;
-  name: string;
-  tags: string[];
-  handleCall(
-    calldata: Uint8Array, 
-    context: ExecutionContext
-  ): Promise<PrecompileResult>;
-  getConfig(): PrecompileConfig;
 }
 
 export interface PrecompileConfig {
@@ -66,7 +78,8 @@ export interface PartialGasPriceComponents {
   congestionFee?: bigint;
 }
 
-export interface PrecompileRegistry {
+// Legacy registry interface for backward compatibility
+export interface LegacyPrecompileRegistry {
   register(handler: PrecompileHandler): void;
   getHandler(address: string): PrecompileHandler | null;
   listHandlers(): PrecompileHandler[];
@@ -76,23 +89,34 @@ export interface PrecompileRegistry {
 /**
  * Implementation of the precompile registry
  */
-export class HardhatPrecompileRegistry implements PrecompileRegistry {
+export class HardhatPrecompileRegistry implements PrecompileRegistry, LegacyPrecompileRegistry {
   private handlers: Map<string, PrecompileHandler> = new Map();
 
-  register(handler: PrecompileHandler): void {
-    if (this.handlers.has(handler.address)) {
-      throw new Error(`Handler already registered for address ${handler.address}`);
+  register(h: PrecompileHandler): void {
+    if (this.handlers.has(h.address)) {
+      throw new Error(
+        `Handler already registered for address ${h.address}`
+      );
     }
-    
-    this.handlers.set(handler.address, handler);
+
+    this.handlers.set(h.address, h);
   }
 
+  getByAddress(addr: 0x${string}): PrecompileHandler | undefined {
+    return this.handlers.get(addr);
+  }
+
+  list(): PrecompileHandler[] {
+    return Array.from(this.handlers.values());
+  }
+
+  // Legacy methods for backward compatibility
   getHandler(address: string): PrecompileHandler | null {
     return this.handlers.get(address) || null;
   }
 
   listHandlers(): PrecompileHandler[] {
-    return Array.from(this.handlers.values());
+    return this.list();
   }
 
   hasHandler(address: string): boolean {
@@ -108,23 +132,49 @@ export class HardhatPrecompileRegistry implements PrecompileRegistry {
     context: ExecutionContext
   ): Promise<PrecompileResult> {
     const handler = this.getHandler(address);
-    
+
     if (!handler) {
       return {
         success: false,
         gasUsed: 0,
-        error: `No handler registered for address ${address}`
+        error: `No handler registered for address ${address}`,
       };
     }
 
     try {
-      return await handler.handleCall(calldata, context);
+      // Convert ExecutionContext to PrecompileContext
+      const precompileContext: PrecompileContext = {
+        blockNumber: BigInt(context.blockNumber),
+        chainId: BigInt(context.chainId),
+        txOrigin: context.caller as 0x${string},
+        msgSender: context.caller as 0x${string},
+        gasPriceWei: context.gasPrice,
+        config: {},
+      };
+
+      const result = await handler.handleCall(calldata, precompileContext);
+      
+      // Convert Uint8Array result to PrecompileResult
+      return {
+        success: true,
+        data: result,
+        gasUsed: 0, // Will be calculated by caller
+      };
     } catch (error) {
       return {
         success: false,
         gasUsed: 0,
-        error: `Handler execution failed: ${error instanceof Error ? error.message : String(error)}`
+        error: `Handler execution failed: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
       };
     }
   }
+}
+
+/**
+ * Create a new precompile registry instance
+ */
+export function createRegistry(): PrecompileRegistry {
+  return new HardhatPrecompileRegistry();
 }
