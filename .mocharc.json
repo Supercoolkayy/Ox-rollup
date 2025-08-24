@@ -1,0 +1,7 @@
+{
+  "require": "ts-node/register",
+  "extension": ["ts"],
+  "spec": "tests/milestone2/**/*.test.ts",
+  "timeout": 10000,
+  "reporter": "spec"
+}

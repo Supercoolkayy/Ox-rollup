@@ -1,0 +1,49 @@
+{
+  "name": "@arbitrum/hardhat-patch",
+  "version": "0.1.0",
+  "description": "Hardhat plugin for Arbitrum precompile support",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "mocha --require ts-node/register 'tests/**/*.test.ts'",
+    "lint": "eslint src/**/*.ts",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "hardhat",
+    "arbitrum",
+    "precompiles",
+    "plugin",
+    "ethereum",
+    "l2"
+  ],
+  "author": "Arbitrum Team",
+  "license": "MIT",
+  "peerDependencies": {
+    "hardhat": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "eslint": "^8.0.0",
+    "mocha": "^9.0.0",
+    "ts-node": "^10.0.0",
+    "typescript": "^4.7.0"
+  },
+  "dependencies": {
+    "hardhat": "^2.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OffchainLabs/ox-rollup.git"
+  },
+  "bugs": {
+    "url": "https://github.com/OffchainLabs/ox-rollup/issues"
+  },
+  "homepage": "https://github.com/OffchainLabs/ox-rollup#readme"
+}
