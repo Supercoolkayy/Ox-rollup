@@ -12,6 +12,8 @@ export type PrecompileContext = {
   msgSender: string; // 0x-prefixed hex address
   gasPriceWei: bigint;
   config: Record<string, unknown>;
+  // Enhanced context for L1 message handling
+  l1MessageQueue?: L1MessageQueue;
 };
 
 export interface PrecompileHandler {
@@ -27,6 +29,24 @@ export interface PrecompileRegistry {
   list(): PrecompileHandler[];
 }
 
+// L1 Message Queue for sendTxToL1 simulation
+export interface L1MessageQueue {
+  addMessage(message: Omit<L1Message, 'id'>): string; // Returns message ID
+  getMessages(): L1Message[];
+  clearMessages(): void;
+}
+
+export interface L1Message {
+  id: string;
+  from: string;
+  to: string;
+  value: bigint;
+  data: Uint8Array;
+  timestamp: number;
+  blockNumber: number;
+  txHash: string;
+}
+
 // Legacy interfaces for backward compatibility
 export interface ExecutionContext {
   blockNumber: number;
@@ -35,6 +55,7 @@ export interface ExecutionContext {
   caller: string;
   callStack: string[];
   l1Context?: L1Context;
+  l1MessageQueue?: L1MessageQueue;
 }
 
 export interface L1Context {
@@ -93,6 +114,7 @@ export class HardhatPrecompileRegistry
   implements PrecompileRegistry, LegacyPrecompileRegistry
 {
   private handlers: Map<string, PrecompileHandler> = new Map();
+  private l1MessageQueue: L1MessageQueue = new HardhatL1MessageQueue();
 
   register(h: PrecompileHandler): void {
     if (this.handlers.has(h.address)) {
@@ -124,6 +146,13 @@ export class HardhatPrecompileRegistry
   }
 
   /**
+   * Get the L1 message queue instance
+   */
+  getL1MessageQueue(): L1MessageQueue {
+    return this.l1MessageQueue;
+  }
+
+  /**
    * Handle a precompile call by delegating to the appropriate handler
    */
   async handleCall(
@@ -150,6 +179,7 @@ export class HardhatPrecompileRegistry
         msgSender: context.caller,
         gasPriceWei: context.gasPrice,
         config: {},
+        l1MessageQueue: this.l1MessageQueue,
       };
 
       const result = await handler.handleCall(calldata, precompileContext);
@@ -169,6 +199,33 @@ export class HardhatPrecompileRegistry
         }`,
       };
     }
+  }
+}
+
+/**
+ * Implementation of L1MessageQueue for Hardhat environment
+ */
+export class HardhatL1MessageQueue implements L1MessageQueue {
+  private messages: L1Message[] = [];
+  private messageCounter = 0;
+
+  addMessage(message: Omit<L1Message, 'id'>): string {
+    const id = `msg_${this.messageCounter++}_${Date.now()}`;
+    const fullMessage: L1Message = {
+      ...message,
+      id,
+    };
+    this.messages.push(fullMessage);
+    return id;
+  }
+
+  getMessages(): L1Message[] {
+    return [...this.messages];
+  }
+
+  clearMessages(): void {
+    this.messages = [];
+    this.messageCounter = 0;
   }
 }
 

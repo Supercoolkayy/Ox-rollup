@@ -13,6 +13,7 @@ import {
   PartialPrecompileConfig,
   GasPriceComponents,
   ExecutionContext,
+  L1Message,
 } from "./registry";
 
 export class ArbSysHandler implements PrecompileHandler {
@@ -21,6 +22,7 @@ export class ArbSysHandler implements PrecompileHandler {
   public readonly tags = ["arbitrum", "precompile"];
 
   private config: PrecompileConfig;
+  private l1MessageCounter = 0;
 
   constructor(config?: PartialPrecompileConfig) {
     const defaultGasComponents = {
@@ -79,6 +81,12 @@ export class ArbSysHandler implements PrecompileHandler {
         case "4d2301cc": // arbOSVersion()
           return this.handleArbOSVersion(ctx);
 
+        case "6e8c1d6f": // sendTxToL1(address,bytes)
+          return this.handleSendTxToL1(calldata, ctx);
+
+        case "a0c12269": // mapL1SenderContractAddressToL2Alias(address)
+          return this.handleMapL1SenderContractAddressToL2Alias(calldata, ctx);
+
         default:
           throw new Error(`Unknown function selector: 0x${selectorHex}`);
       }
@@ -123,6 +131,12 @@ export class ArbSysHandler implements PrecompileHandler {
 
         case "4d2301cc": // arbOSVersion()
           return this.handleArbOSVersionLegacy(context);
+
+        case "6e8c1d6f": // sendTxToL1(address,bytes)
+          return this.handleSendTxToL1Legacy(calldata, context);
+
+        case "a0c12269": // mapL1SenderContractAddressToL2Alias(address)
+          return this.handleMapL1SenderContractAddressToL2AliasLegacy(calldata, context);
 
         default:
           return {
@@ -173,6 +187,76 @@ export class ArbSysHandler implements PrecompileHandler {
 
   private handleArbOSVersion(ctx: PrecompileContext): Uint8Array {
     return this.encodeUint256(this.config.arbOSVersion);
+  }
+
+  private handleSendTxToL1(
+    calldata: Uint8Array,
+    ctx: PrecompileContext
+  ): Uint8Array {
+    // sendTxToL1(address,bytes) - selector: 6e8c1d6f
+    // Calldata: 4 bytes selector + 32 bytes offset + 32 bytes length + data
+    if (calldata.length < 68) {
+      throw new Error("Invalid calldata length for sendTxToL1");
+    }
+
+    // Parse calldata to extract destination address and data
+    const dataView = new DataView(calldata.buffer, calldata.byteOffset);
+    
+    // Read offset to data (bytes32)
+    const dataOffset = Number(dataView.getBigUint64(32 + 24, false));
+    
+    // Read data length (bytes32)
+    const dataLength = Number(dataView.getBigUint64(64 + 24, false));
+    
+    // Extract destination address (first 20 bytes after selector)
+    const destAddress = this.extractAddress(calldata, 4);
+    
+    // Extract data bytes
+    const data = calldata.slice(dataOffset, dataOffset + dataLength);
+
+    // Add message to L1 queue if available
+    if (ctx.l1MessageQueue) {
+      const message: Omit<L1Message, 'id'> = {
+        from: ctx.msgSender,
+        to: destAddress,
+        value: BigInt(0), // sendTxToL1 doesn't transfer value
+        data: data,
+        timestamp: Date.now(),
+        blockNumber: Number(ctx.blockNumber),
+        txHash: `0x${Math.random().toString(16).slice(2, 66).padStart(64, '0')}`, // Mock tx hash
+      };
+      
+      const messageId = ctx.l1MessageQueue.addMessage(message);
+      
+      // Log the L1 message for developer visibility
+      console.log(`📤 L1 Message queued: ${messageId}`);
+      console.log(`   From: ${message.from}`);
+      console.log(`   To: ${message.to}`);
+      console.log(`   Data length: ${data.length} bytes`);
+    }
+
+    // Return a mock message ID (in real Arbitrum, this would be a unique identifier)
+    const messageId = this.generateMessageId();
+    return this.encodeUint256(messageId);
+  }
+
+  private handleMapL1SenderContractAddressToL2Alias(
+    calldata: Uint8Array,
+    ctx: PrecompileContext
+  ): Uint8Array {
+    // mapL1SenderContractAddressToL2Alias(address) - selector: a0c12269
+    // Calldata: 4 bytes selector + 32 bytes address
+    if (calldata.length < 36) {
+      throw new Error("Invalid calldata length for mapL1SenderContractAddressToL2Alias");
+    }
+
+    // Extract the L1 contract address
+    const l1Address = this.extractAddress(calldata, 4);
+    
+    // Apply Arbitrum's address aliasing: L2 = L1 + 0x1111000000000000000000000000000000001111
+    const l2Alias = this.applyAddressAliasing(l1Address);
+    
+    return l2Alias;
   }
 
   // Legacy handlers for backward compatibility
@@ -229,6 +313,52 @@ export class ArbSysHandler implements PrecompileHandler {
     };
   }
 
+  private handleSendTxToL1Legacy(
+    calldata: Uint8Array,
+    context: ExecutionContext
+  ): PrecompileResult {
+    if (calldata.length < 68) {
+      return {
+        success: false,
+        gasUsed: 0,
+        error: "Invalid calldata length for sendTxToL1",
+      };
+    }
+
+    // Mock implementation for legacy mode
+    const messageId = this.generateMessageId();
+    return {
+      success: true,
+      data: this.encodeUint256(messageId),
+      gasUsed: 100,
+    };
+  }
+
+  private handleMapL1SenderContractAddressToL2AliasLegacy(
+    calldata: Uint8Array,
+    context: ExecutionContext
+  ): PrecompileResult {
+    if (calldata.length < 36) {
+      return {
+        success: false,
+        gasUsed: 0,
+        error: "Invalid calldata length for mapL1SenderContractAddressToL2Alias",
+      };
+    }
+
+    // Extract the L1 contract address
+    const l1Address = this.extractAddress(calldata, 4);
+    
+    // Apply Arbitrum's address aliasing
+    const l2Alias = this.applyAddressAliasing(l1Address);
+    
+    return {
+      success: true,
+      data: l2Alias,
+      gasUsed: 50,
+    };
+  }
+
   /**
    * Encode a uint256 value as a 32-byte array
    */
@@ -237,5 +367,41 @@ export class ArbSysHandler implements PrecompileHandler {
     const view = new DataView(buffer);
     view.setBigUint64(24, BigInt(value), false); // Little-endian, last 8 bytes
     return new Uint8Array(buffer);
+  }
+
+  /**
+   * Extract an address from calldata at the specified offset
+   */
+  private extractAddress(calldata: Uint8Array, offset: number): string {
+    // Address is 20 bytes, but calldata stores it as 32 bytes (padded)
+    const addressBytes = calldata.slice(offset + 12, offset + 32); // Skip first 12 bytes of padding
+    return `0x${Array.from(addressBytes).map(b => b.toString(16).padStart(2, '0')).join('')}`;
+  }
+
+  /**
+   * Apply Arbitrum's address aliasing: L2 = L1 + 0x1111000000000000000000000000000000001111
+   */
+  private applyAddressAliasing(l1Address: string): Uint8Array {
+    // Remove 0x prefix and convert to BigInt
+    const l1BigInt = BigInt(l1Address);
+    
+    // Arbitrum aliasing constant
+    const aliasingConstant = BigInt("0x1111000000000000000000000000000000001111");
+    
+    // Apply aliasing
+    const l2Alias = l1BigInt + aliasingConstant;
+    
+    // Convert back to 32-byte array
+    const buffer = new ArrayBuffer(32);
+    const view = new DataView(buffer);
+    view.setBigUint64(24, l2Alias, false);
+    return new Uint8Array(buffer);
+  }
+
+  /**
+   * Generate a mock message ID for sendTxToL1
+   */
+  private generateMessageId(): number {
+    return ++this.l1MessageCounter;
   }
 }

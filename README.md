@@ -12,27 +12,27 @@ Milestone 1 deliverables have been completed and are ready for review. All speci
 
 ### Deliverables Completed
 
-1. **Compatibility Matrix** (`docs/m1-compatibility-matrix.md`)
+1. **[Compatibility Matrix](docs/m1-compatibility-matrix.md)**
 
    - Comprehensive analysis of Arbitrum features vs Hardhat and Foundry
    - Priority-based feature categorization (P0, P1, P2)
    - Technical root cause analysis
    - Implementation feasibility assessment
 
-2. **Compatibility Matrix (CSV)** (`docs/m1-compatibility-matrix.csv`)
+2. **[Compatibility Matrix (CSV)](docs/m1-compatibility-matrix.csv)**
 
    - Machine-readable format for analysis
    - Detailed method-by-method compatibility status
    - Complexity and implementation notes
 
-3. **Technical Design Brief** (`docs/m1-design-brief.md`)
+3. **[Technical Design Brief](docs/m1-design-brief.md)**
 
    - Implementation-ready design for engineers in M2
    - Architecture overview for both Hardhat and Foundry
    - Detailed implementation strategies
    - Configuration schemas and testing strategies
 
-4. **Technical Specifications** (`docs/m1-specification-details.md`)
+4. **[Technical Specifications](docs/m1-specification-details.md)**
 
    - Complete Arbitrum Nitro precompile specifications
    - Detailed function signatures and return types
@@ -40,13 +40,21 @@ Milestone 1 deliverables have been completed and are ready for review. All speci
    - Method selectors and implementation priorities
 
 5. **Probe Files** (Optional)
-   - **Hardhat Probes** (`probes/hardhat/`)
+   - **[Hardhat Probes](probes/hardhat/)**
      - `test-arbsys-calls.js` - Tests ArbSys precompile functionality
      - `test-arbgasinfo.js` - Tests ArbGasInfo precompile functionality
      - `test-deposit-tx.js` - Tests deposit transaction (0x7e) support
-   - **Foundry Probes** (`probes/foundry/`)
+   - **[Foundry Probes](probes/foundry/)**
      - `test-precompiles.sol` - Solidity tests for precompiles
      - `test-deposit-flow.sh` - Shell script for deposit transaction testing
+
+## Continue Reading
+
+For detailed information about the project implementation and current status:
+
+- **[Milestone 2 Implementation](docs/milestone2/)** - Current development progress
+- **[Verification Reports](docs/verification/)** - Quality assurance and validation
+- **[Project Architecture](docs/milestone2/ARCH_STEP1.md)** - Technical design details
 
 ## Key Findings
 
@@ -96,7 +104,9 @@ ox-rollup/
 │   ├── m1-compatibility-matrix.md      # Main compatibility analysis
 │   ├── m1-compatibility-matrix.csv     # CSV format for analysis
 │   ├── m1-design-brief.md              # Technical implementation guide
-│   └── m1-specification-details.md     # Complete technical specifications
+│   ├── m1-specification-details.md     # Complete technical specifications
+│   ├── milestone2/                     # Current development progress
+│   └── verification/                   # Quality assurance reports
 ├── probes/
 │   ├── hardhat/                        # Hardhat testing scripts
 │   │   ├── test-arbsys-calls.js
@@ -138,9 +148,9 @@ chmod +x probes/foundry/test-deposit-flow.sh
 
 ## Documentation
 
-- **Compatibility Matrix**: Comprehensive feature-by-feature analysis
-- **Design Brief**: Implementation-ready technical specifications
-- **Probe Files**: Testing utilities for validation
+- **[Compatibility Matrix](docs/m1-compatibility-matrix.md)**: Comprehensive feature-by-feature analysis
+- **[Design Brief](docs/m1-design-brief.md)**: Implementation-ready technical specifications
+- **[Probe Files](probes/)**: Testing utilities for validation
 
 ## Dependencies
 
