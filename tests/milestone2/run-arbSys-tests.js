@@ -13,8 +13,12 @@ async function main() {
 
   try {
     // Use dynamic import for ES modules
-    const registryModule = await import("../../src/hardhat-patch/dist/precompiles/registry.js");
-    const arbSysModule = await import("../../src/hardhat-patch/dist/precompiles/arbSys.js");
+    const registryModule = await import(
+      "../../src/hardhat-patch/dist/precompiles/registry.js"
+    );
+    const arbSysModule = await import(
+      "../../src/hardhat-patch/dist/precompiles/arbSys.js"
+    );
 
     HardhatPrecompileRegistry = registryModule.HardhatPrecompileRegistry;
     ArbSysHandler = arbSysModule.ArbSysHandler;
@@ -62,7 +66,7 @@ async function main() {
     const handler = new ArbSysHandler();
 
     registry.register(handler);
-    
+
     if (!registry.hasHandler(handler.address)) {
       throw new Error("Handler not registered");
     }
@@ -157,14 +161,19 @@ async function main() {
 
     // For now, just verify the selectors are documented
     // In a full test, we would test each function call
-    console.log("   📝 Documented method selectors:", expectedSelectors.join(", "));
+    console.log(
+      "   📝 Documented method selectors:",
+      expectedSelectors.join(", ")
+    );
   });
 
   console.log("\n🏁 Test Results:");
   console.log(`Total Tests: ${totalTests}`);
   console.log(`Passed: ${passedTests}`);
   console.log(`Failed: ${failedTests}`);
-  console.log(`Success Rate: ${((passedTests / totalTests) * 100).toFixed(1)}%`);
+  console.log(
+    `Success Rate: ${((passedTests / totalTests) * 100).toFixed(1)}%`
+  );
 
   if (failedTests === 0) {
     console.log("\n✅ All tests passed successfully!");
@@ -177,7 +186,7 @@ async function main() {
 }
 
 // Run the main function
-main().catch(error => {
+main().catch((error) => {
   console.error("❌ Test runner failed:", error.message);
   process.exit(1);
 });

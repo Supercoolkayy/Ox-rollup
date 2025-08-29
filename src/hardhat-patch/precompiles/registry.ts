@@ -31,7 +31,7 @@ export interface PrecompileRegistry {
 
 // L1 Message Queue for sendTxToL1 simulation
 export interface L1MessageQueue {
-  addMessage(message: Omit<L1Message, 'id'>): string; // Returns message ID
+  addMessage(message: Omit<L1Message, "id">): string; // Returns message ID
   getMessages(): L1Message[];
   clearMessages(): void;
 }
@@ -209,7 +209,7 @@ export class HardhatL1MessageQueue implements L1MessageQueue {
   private messages: L1Message[] = [];
   private messageCounter = 0;
 
-  addMessage(message: Omit<L1Message, 'id'>): string {
+  addMessage(message: Omit<L1Message, "id">): string {
     const id = `msg_${this.messageCounter++}_${Date.now()}`;
     const fullMessage: L1Message = {
       ...message,

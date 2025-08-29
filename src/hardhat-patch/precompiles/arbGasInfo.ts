@@ -2,7 +2,7 @@
  * ArbGasInfo Precompile Handler (0x6C)
  *
  * Implements the ArbGasInfo precompile interface for local development.
- * This is a stub implementation that provides basic gas pricing functionality.
+ * Provides configurable gas pricing functionality with Nitro baseline gas model.
  */
 
 import {
@@ -14,6 +14,8 @@ import {
   GasPriceComponents,
   ExecutionContext,
 } from "./registry";
+import * as fs from "fs";
+import * as path from "path";
 
 export class ArbGasInfoHandler implements PrecompileHandler {
   public readonly address = "0x000000000000000000000000000000000000006c";
@@ -21,6 +23,7 @@ export class ArbGasInfoHandler implements PrecompileHandler {
   public readonly tags = ["arbitrum", "precompile"];
 
   private config: PrecompileConfig;
+  private gasConfigPath: string;
 
   constructor(config?: PartialPrecompileConfig) {
     const defaultGasComponents = {
@@ -49,6 +52,47 @@ export class ArbGasInfoHandler implements PrecompileHandler {
           defaultGasComponents.congestionFee,
       },
     };
+
+    // Try to load gas config from file
+    this.gasConfigPath = path.join(process.cwd(), "node_state", "gas_config.json");
+    this.loadGasConfig();
+  }
+
+  /**
+   * Load gas configuration from file if available
+   */
+  private loadGasConfig(): void {
+    try {
+      if (fs.existsSync(this.gasConfigPath)) {
+        const configData = fs.readFileSync(this.gasConfigPath, "utf8");
+        const gasConfig = JSON.parse(configData);
+        
+        // Update config with file values
+        if (gasConfig.l1BaseFee) {
+          this.config.l1BaseFee = BigInt(gasConfig.l1BaseFee);
+        }
+        
+        if (gasConfig.gasPriceComponents) {
+          const components = gasConfig.gasPriceComponents;
+          if (components.l2BaseFee) {
+            this.config.gasPriceComponents.l2BaseFee = BigInt(components.l2BaseFee);
+          }
+          if (components.l1CalldataCost) {
+            this.config.gasPriceComponents.l1CalldataCost = BigInt(components.l1CalldataCost);
+          }
+          if (components.l1StorageCost) {
+            this.config.gasPriceComponents.l1StorageCost = BigInt(components.l1StorageCost);
+          }
+          if (components.congestionFee) {
+            this.config.gasPriceComponents.congestionFee = BigInt(components.congestionFee);
+          }
+        }
+
+        console.log(`📊 Loaded gas config from ${this.gasConfigPath}`);
+      }
+    } catch (error) {
+      console.warn(`⚠️ Failed to load gas config: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   async handleCall(
@@ -146,36 +190,59 @@ export class ArbGasInfoHandler implements PrecompileHandler {
     return { ...this.config };
   }
 
+  /**
+   * Calculate L1 gas fees for current transaction
+   * Implements Nitro baseline gas algorithm
+   */
+  private calculateL1GasFees(calldata: Uint8Array): bigint {
+    const calldataSize = calldata.length;
+    const l1GasUsed = calldataSize * Number(this.config.gasPriceComponents.l1CalldataCost);
+    return BigInt(l1GasUsed) * this.config.l1BaseFee;
+  }
+
+  /**
+   * Get gas prices in wei (5-tuple)
+   * Returns: (l2BaseFee, l1CalldataCost, l1StorageCost, baseL2GasPrice, congestionFee)
+   */
   private handleGetPricesInWei(ctx: PrecompileContext): Uint8Array {
-    // Return 5-tuple: (l2BaseFee, l1CalldataCost, l1StorageCost, baseL2GasPrice, congestionFee)
     const data = new Uint8Array(160); // 5 * 32 bytes
     const view = new DataView(data.buffer);
 
     let offset = 0;
+    
+    // L2 base fee
     view.setBigUint64(
       offset + 24,
       this.config.gasPriceComponents.l2BaseFee,
       false
     );
     offset += 32;
+    
+    // L1 calldata cost per byte
     view.setBigUint64(
       offset + 24,
       this.config.gasPriceComponents.l1CalldataCost,
       false
     );
     offset += 32;
+    
+    // L1 storage cost (always 0 in Nitro)
     view.setBigUint64(
       offset + 24,
       this.config.gasPriceComponents.l1StorageCost,
       false
     );
     offset += 32;
+    
+    // Base L2 gas price (same as L2 base fee)
     view.setBigUint64(
       offset + 24,
       this.config.gasPriceComponents.l2BaseFee,
       false
     );
     offset += 32;
+    
+    // Congestion fee
     view.setBigUint64(
       offset + 24,
       this.config.gasPriceComponents.congestionFee,
@@ -185,41 +252,52 @@ export class ArbGasInfoHandler implements PrecompileHandler {
     return data;
   }
 
+  /**
+   * Get L1 base fee estimate
+   */
   private handleGetL1BaseFeeEstimate(ctx: PrecompileContext): Uint8Array {
     return this.encodeUint256(Number(this.config.l1BaseFee));
   }
 
+  /**
+   * Get current transaction L1 gas fees
+   * Implements Nitro baseline gas calculation
+   */
   private handleGetCurrentTxL1GasFees(
     calldata: Uint8Array,
     ctx: PrecompileContext
   ): Uint8Array {
-    // For now, return a simple calculation based on calldata size
-    // In a real implementation, this would calculate actual L1 gas costs
-    const calldataSize = calldata.length;
-    const l1GasUsed = calldataSize * 16; // 16 gas per byte
-    const l1GasFees = BigInt(l1GasUsed) * this.config.l1BaseFee;
-
+    const l1GasFees = this.calculateL1GasFees(calldata);
     return this.encodeUint256(Number(l1GasFees));
   }
 
+  /**
+   * Get gas prices in ArbGas units (3-tuple)
+   * Returns: (l2BaseFee, l1CalldataCost, l1StorageCost)
+   */
   private handleGetPricesInArbGas(ctx: PrecompileContext): Uint8Array {
-    // Return 3-tuple: (l2BaseFee, l1CalldataCost, l1StorageCost) in ArbGas units
     const data = new Uint8Array(96); // 3 * 32 bytes
     const view = new DataView(data.buffer);
 
     let offset = 0;
+    
+    // L2 base fee
     view.setBigUint64(
       offset + 24,
       this.config.gasPriceComponents.l2BaseFee,
       false
     );
     offset += 32;
+    
+    // L1 calldata cost per byte
     view.setBigUint64(
       offset + 24,
       this.config.gasPriceComponents.l1CalldataCost,
       false
     );
     offset += 32;
+    
+    // L1 storage cost (always 0 in Nitro)
     view.setBigUint64(
       offset + 24,
       this.config.gasPriceComponents.l1StorageCost,
@@ -233,40 +311,14 @@ export class ArbGasInfoHandler implements PrecompileHandler {
   private handleGetPricesInWeiLegacy(
     context: ExecutionContext
   ): PrecompileResult {
-    // Return 5-tuple: (l2BaseFee, l1CalldataCost, l1StorageCost, baseL2GasPrice, congestionFee)
-    const data = new Uint8Array(160); // 5 * 32 bytes
-    const view = new DataView(data.buffer);
-
-    let offset = 0;
-    view.setBigUint64(
-      offset + 24,
-      this.config.gasPriceComponents.l2BaseFee,
-      false
-    );
-    offset += 32;
-    view.setBigUint64(
-      offset + 24,
-      this.config.gasPriceComponents.l1CalldataCost,
-      false
-    );
-    offset += 32;
-    view.setBigUint64(
-      offset + 24,
-      this.config.gasPriceComponents.l1StorageCost,
-      false
-    );
-    offset += 32;
-    view.setBigUint64(
-      offset + 24,
-      this.config.gasPriceComponents.l2BaseFee,
-      false
-    );
-    offset += 32;
-    view.setBigUint64(
-      offset + 24,
-      this.config.gasPriceComponents.congestionFee,
-      false
-    );
+    const data = this.handleGetPricesInWei({
+      blockNumber: BigInt(context.blockNumber),
+      chainId: BigInt(context.chainId),
+      txOrigin: context.caller,
+      msgSender: context.caller,
+      gasPriceWei: context.gasPrice,
+      config: {},
+    });
 
     return {
       success: true,
@@ -289,12 +341,8 @@ export class ArbGasInfoHandler implements PrecompileHandler {
     calldata: Uint8Array,
     context: ExecutionContext
   ): PrecompileResult {
-    // For now, return a simple calculation based on calldata size
-    // In a real implementation, this would calculate actual L1 gas costs
-    const calldataSize = calldata.length;
-    const l1GasUsed = calldataSize * 16; // 16 gas per byte
-    const l1GasFees = BigInt(l1GasUsed) * this.config.l1BaseFee;
-
+    const l1GasFees = this.calculateL1GasFees(calldata);
+    
     return {
       success: true,
       data: this.encodeUint256(Number(l1GasFees)),
@@ -305,28 +353,14 @@ export class ArbGasInfoHandler implements PrecompileHandler {
   private handleGetPricesInArbGasLegacy(
     context: ExecutionContext
   ): PrecompileResult {
-    // Return 3-tuple: (l2BaseFee, l1CalldataCost, l1StorageCost) in ArbGas units
-    const data = new Uint8Array(96); // 3 * 32 bytes
-    const view = new DataView(data.buffer);
-
-    let offset = 0;
-    view.setBigUint64(
-      offset + 24,
-      this.config.gasPriceComponents.l2BaseFee,
-      false
-    );
-    offset += 32;
-    view.setBigUint64(
-      offset + 24,
-      this.config.gasPriceComponents.l1CalldataCost,
-      false
-    );
-    offset += 32;
-    view.setBigUint64(
-      offset + 24,
-      this.config.gasPriceComponents.l1StorageCost,
-      false
-    );
+    const data = this.handleGetPricesInArbGas({
+      blockNumber: BigInt(context.blockNumber),
+      chainId: BigInt(context.chainId),
+      txOrigin: context.caller,
+      msgSender: context.caller,
+      gasPriceWei: context.gasPrice,
+      config: {},
+    });
 
     return {
       success: true,
@@ -343,5 +377,25 @@ export class ArbGasInfoHandler implements PrecompileHandler {
     const view = new DataView(buffer);
     view.setBigUint64(24, BigInt(value), false); // Little-endian, last 8 bytes
     return new Uint8Array(buffer);
+  }
+
+  /**
+   * Reload gas configuration from file
+   * Useful for runtime configuration updates
+   */
+  public reloadGasConfig(): void {
+    this.loadGasConfig();
+  }
+
+  /**
+   * Get current gas configuration as human-readable string
+   */
+  public getGasConfigSummary(): string {
+    return `Gas Config:
+  L1 Base Fee: ${this.config.l1BaseFee} wei (${Number(this.config.l1BaseFee) / 1e9} gwei)
+  L2 Base Fee: ${this.config.gasPriceComponents.l2BaseFee} wei (${Number(this.config.gasPriceComponents.l2BaseFee) / 1e9} gwei)
+  L1 Calldata Cost: ${this.config.gasPriceComponents.l1CalldataCost} gas/byte
+  L1 Storage Cost: ${this.config.gasPriceComponents.l1StorageCost} gas
+  Congestion Fee: ${this.config.gasPriceComponents.congestionFee} wei`;
   }
 }

@@ -136,7 +136,10 @@ export class ArbSysHandler implements PrecompileHandler {
           return this.handleSendTxToL1Legacy(calldata, context);
 
         case "a0c12269": // mapL1SenderContractAddressToL2Alias(address)
-          return this.handleMapL1SenderContractAddressToL2AliasLegacy(calldata, context);
+          return this.handleMapL1SenderContractAddressToL2AliasLegacy(
+            calldata,
+            context
+          );
 
         default:
           return {
@@ -201,33 +204,36 @@ export class ArbSysHandler implements PrecompileHandler {
 
     // Parse calldata to extract destination address and data
     const dataView = new DataView(calldata.buffer, calldata.byteOffset);
-    
+
     // Read offset to data (bytes32)
     const dataOffset = Number(dataView.getBigUint64(32 + 24, false));
-    
+
     // Read data length (bytes32)
     const dataLength = Number(dataView.getBigUint64(64 + 24, false));
-    
+
     // Extract destination address (first 20 bytes after selector)
     const destAddress = this.extractAddress(calldata, 4);
-    
+
     // Extract data bytes
     const data = calldata.slice(dataOffset, dataOffset + dataLength);
 
     // Add message to L1 queue if available
     if (ctx.l1MessageQueue) {
-      const message: Omit<L1Message, 'id'> = {
+      const message: Omit<L1Message, "id"> = {
         from: ctx.msgSender,
         to: destAddress,
         value: BigInt(0), // sendTxToL1 doesn't transfer value
         data: data,
         timestamp: Date.now(),
         blockNumber: Number(ctx.blockNumber),
-        txHash: `0x${Math.random().toString(16).slice(2, 66).padStart(64, '0')}`, // Mock tx hash
+        txHash: `0x${Math.random()
+          .toString(16)
+          .slice(2, 66)
+          .padStart(64, "0")}`, // Mock tx hash
       };
-      
+
       const messageId = ctx.l1MessageQueue.addMessage(message);
-      
+
       // Log the L1 message for developer visibility
       console.log(`📤 L1 Message queued: ${messageId}`);
       console.log(`   From: ${message.from}`);
@@ -247,15 +253,17 @@ export class ArbSysHandler implements PrecompileHandler {
     // mapL1SenderContractAddressToL2Alias(address) - selector: a0c12269
     // Calldata: 4 bytes selector + 32 bytes address
     if (calldata.length < 36) {
-      throw new Error("Invalid calldata length for mapL1SenderContractAddressToL2Alias");
+      throw new Error(
+        "Invalid calldata length for mapL1SenderContractAddressToL2Alias"
+      );
     }
 
     // Extract the L1 contract address
     const l1Address = this.extractAddress(calldata, 4);
-    
+
     // Apply Arbitrum's address aliasing: L2 = L1 + 0x1111000000000000000000000000000000001111
     const l2Alias = this.applyAddressAliasing(l1Address);
-    
+
     return l2Alias;
   }
 
@@ -342,16 +350,17 @@ export class ArbSysHandler implements PrecompileHandler {
       return {
         success: false,
         gasUsed: 0,
-        error: "Invalid calldata length for mapL1SenderContractAddressToL2Alias",
+        error:
+          "Invalid calldata length for mapL1SenderContractAddressToL2Alias",
       };
     }
 
     // Extract the L1 contract address
     const l1Address = this.extractAddress(calldata, 4);
-    
+
     // Apply Arbitrum's address aliasing
     const l2Alias = this.applyAddressAliasing(l1Address);
-    
+
     return {
       success: true,
       data: l2Alias,
@@ -375,7 +384,9 @@ export class ArbSysHandler implements PrecompileHandler {
   private extractAddress(calldata: Uint8Array, offset: number): string {
     // Address is 20 bytes, but calldata stores it as 32 bytes (padded)
     const addressBytes = calldata.slice(offset + 12, offset + 32); // Skip first 12 bytes of padding
-    return `0x${Array.from(addressBytes).map(b => b.toString(16).padStart(2, '0')).join('')}`;
+    return `0x${Array.from(addressBytes)
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("")}`;
   }
 
   /**
@@ -384,13 +395,15 @@ export class ArbSysHandler implements PrecompileHandler {
   private applyAddressAliasing(l1Address: string): Uint8Array {
     // Remove 0x prefix and convert to BigInt
     const l1BigInt = BigInt(l1Address);
-    
+
     // Arbitrum aliasing constant
-    const aliasingConstant = BigInt("0x1111000000000000000000000000000000001111");
-    
+    const aliasingConstant = BigInt(
+      "0x1111000000000000000000000000000000001111"
+    );
+
     // Apply aliasing
     const l2Alias = l1BigInt + aliasingConstant;
-    
+
     // Convert back to 32-byte array
     const buffer = new ArrayBuffer(32);
     const view = new DataView(buffer);
