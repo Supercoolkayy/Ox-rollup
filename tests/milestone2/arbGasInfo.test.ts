@@ -22,7 +22,7 @@ describe("ArbGasInfo Precompile Handler", () => {
 
   beforeEach(() => {
     registry = new HardhatPrecompileRegistry();
-    
+
     arbGasInfoHandler = new ArbGasInfoHandler({
       chainId: 42161, // Arbitrum One
       arbOSVersion: 20,
@@ -184,7 +184,7 @@ describe("ArbGasInfo Precompile Handler", () => {
       // Test with large calldata (simulating complex contract calls)
       const largeCalldata = new Uint8Array(10000); // 10KB
       const l1GasFees = handler["calculateL1GasFees"](largeCalldata);
-      
+
       // Expected: 10000 * 16 * 20e9 = 3,200,000,000,000,000 wei
       const expectedFees = BigInt(10000) * BigInt(16) * BigInt(20e9);
       expect(l1GasFees).to.equal(expectedFees);
@@ -299,15 +299,17 @@ describe("ArbGasInfo Precompile Handler", () => {
       const handlers = registry.list();
 
       expect(handlers).to.have.length(2);
-      
-      const arbGasInfoHandler = handlers.find(h => h.name === "ArbGasInfo");
+
+      const arbGasInfoHandler = handlers.find((h) => h.name === "ArbGasInfo");
       expect(arbGasInfoHandler).to.not.be.undefined;
-      expect(arbGasInfoHandler!.address).to.equal("0x000000000000000000000000000000000000006c");
+      expect(arbGasInfoHandler!.address).to.equal(
+        "0x000000000000000000000000000000000000006c"
+      );
     });
 
     it("should handle calls through the patch registry", async () => {
       const registry = patch.getRegistry();
-      
+
       const calldata = new Uint8Array([0x4d, 0x23, 0x01, 0xcc]); // getPricesInWei()
       const context = {
         blockNumber: 12345,
@@ -341,7 +343,7 @@ describe("ArbGasInfo Precompile Handler", () => {
       // Test the private calculateL1GasFees method
       const testCalldata = new Uint8Array([0x12, 0x34, 0x56, 0x78, 0x9a]); // 5 bytes
       const l1GasFees = handler["calculateL1GasFees"](testCalldata);
-      
+
       // Expected: 5 bytes * 16 gas per byte * 20 gwei = 1,600,000,000,000 wei
       const expectedFees = BigInt(5) * BigInt(16) * BigInt(20e9);
       expect(l1GasFees).to.equal(expectedFees);
@@ -370,7 +372,7 @@ describe("ArbGasInfo Precompile Handler", () => {
 
       const singleByteCalldata = new Uint8Array([0x42]);
       const l1GasFees = handler["calculateL1GasFees"](singleByteCalldata);
-      
+
       // Expected: 1 byte * 16 gas per byte * 20 gwei = 320,000,000,000 wei
       const expectedFees = BigInt(1) * BigInt(16) * BigInt(20e9);
       expect(l1GasFees).to.equal(expectedFees);
@@ -397,7 +399,7 @@ function decodePricesInWei(data: Uint8Array): {
   congestionFee: number;
 } {
   const view = new DataView(data.buffer, data.byteOffset);
-  
+
   return {
     l2BaseFee: Number(view.getBigUint64(24, false)),
     l1CalldataCost: Number(view.getBigUint64(56, false)),
@@ -416,7 +418,7 @@ function decodePricesInArbGas(data: Uint8Array): {
   l1StorageCost: number;
 } {
   const view = new DataView(data.buffer, data.byteOffset);
-  
+
   return {
     l2BaseFee: Number(view.getBigUint64(24, false)),
     l1CalldataCost: Number(view.getBigUint64(56, false)),

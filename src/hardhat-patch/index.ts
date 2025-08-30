@@ -78,7 +78,7 @@ export class HardhatArbitrumPatch {
       });
       this.registry.register(arbGasInfoHandler);
 
-      console.log("✅ Arbitrum precompile handlers registered successfully");
+      console.log("Arbitrum precompile handlers registered successfully");
       console.log(`   ArbSys: ${arbSysHandler.address}`);
       console.log(`   ArbGasInfo: ${arbGasInfoHandler.address}`);
     } catch (error) {
@@ -149,7 +149,7 @@ export function initArbitrumPatch(
     // Attach to the environment for access in tasks and scripts
     (hre as any).arbitrumPatch = arbitrumPatch;
 
-    console.log("🚀 Hardhat Arbitrum Patch initialized");
+    console.log(" Hardhat Arbitrum Patch initialized");
   }
 }
 
@@ -166,7 +166,7 @@ extendEnvironment((hre: HardhatRuntimeEnvironment) => {
     (hre as any).arbitrum = arbitrumPatch;
 
     // Log successful initialization
-    console.log("🚀 Hardhat Arbitrum Patch initialized");
+    console.log(" Hardhat Arbitrum Patch initialized");
   }
 });
 
@@ -174,3 +174,8 @@ extendEnvironment((hre: HardhatRuntimeEnvironment) => {
 export * from "./precompiles/registry";
 export * from "./precompiles/arbSys";
 export * from "./precompiles/arbGasInfo";
+
+// Export transaction type 0x7e support
+export * from "./tx/tx7e-parser";
+export * from "./tx/tx7e-processor";
+export * from "./tx/tx7e-integration";

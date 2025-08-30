@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Tests for Milestone 2 ArbSys implementation",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "test": "hardhat test",
     "test:arbSys": "hardhat test arbSys.test.ts"
@@ -11,7 +10,10 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
     "hardhat": "^2.19.0",
-    "typescript": "^5.0.0",
-    "ts-node": "^10.9.0"
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "ethers": "^5.8.0"
   }
 }

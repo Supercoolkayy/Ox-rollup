@@ -50,10 +50,10 @@ Analysis based on:
 
 | Feature                   | Subfeature/Function        | Address/Type | Hardhat Support | Foundry/Anvil Support | Evidence                                                                                        | Proposed Fix                          | Priority | Notes                                         |
 | ------------------------- | -------------------------- | ------------ | --------------- | --------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------- | -------- | --------------------------------------------- |
-| **Transaction Parsing**   | RLP Decoding               | 0x7e         | ⚠️ **Partial**  | Not Supported         | `probes/hardhat/scripts/probe-0x7e.ts` - Transaction accepted but may not have proper semantics | Implement proper 0x7e parser          | P0       | Hardhat accepts but may not process correctly |
+| **Transaction Parsing**   | RLP Decoding               | 0x7e         | **Partial**     | Not Supported         | `probes/hardhat/scripts/probe-0x7e.ts` - Transaction accepted but may not have proper semantics | Implement proper 0x7e parser          | P0       | Hardhat accepts but may not process correctly |
 | **Transaction Execution** | Deposit Processing         | 0x7e         | Not Supported   | Not Supported         | Not tested in probes                                                                            | Implement deposit transaction handler | P0       | Execute with L1→L2 address resolution         |
 | **Signature Validation**  | ECDSA Verification         | 0x7e         | Not Supported   | Not Supported         | Not tested in probes                                                                            | Implement signature validation        | P0       | Validate ECDSA signature for deposit          |
-| **RPC Support**           | `eth_sendRawTransaction`   | 0x7e         | ⚠️ **Partial**  | Not Supported         | `probes/hardhat/scripts/probe-0x7e.ts` - Transaction sent successfully                          | Extend RPC to handle 0x7e             | P0       | Hardhat accepts but may not process correctly |
+| **RPC Support**           | `eth_sendRawTransaction`   | 0x7e         | **Partial**     | Not Supported         | `probes/hardhat/scripts/probe-0x7e.ts` - Transaction sent successfully                          | Extend RPC to handle 0x7e             | P0       | Hardhat accepts but may not process correctly |
 | **Receipt Generation**    | Transaction Receipt        | 0x7e         | Not Supported   | Not Supported         | Not tested in probes                                                                            | Generate proper receipt format        | P1       | Include deposit-specific fields               |
 | **Transaction Details**   | `eth_getTransactionByHash` | 0x7e         | Not Supported   | Not Supported         | Not tested in probes                                                                            | Return deposit transaction details    | P1       | Include all deposit fields                    |
 
@@ -66,7 +66,7 @@ Analysis based on:
   - `arbBlockNumber()`: CALL_EXCEPTION, data: "0x"
 - **ArbGasInfo Precompiles**: All calls return `CALL_EXCEPTION` with empty data (`0x`)
   - `getCurrentTxL1GasFees()`: CALL_EXCEPTION, data: "0x"
-- **0x7e Transactions**: ⚠️ **Unexpected Success** - Transaction sent successfully
+- **0x7e Transactions**: **Unexpected Success** - Transaction sent successfully
   - Hash: `0xae75d9ef9997836b0f3c0aa027a55531494df6573a72d0f802435a2efd7977cf`
   - **Note**: This suggests Hardhat Network is more permissive than expected
 

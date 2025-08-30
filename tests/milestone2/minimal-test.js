@@ -18,11 +18,11 @@ function runTest(name, testFn) {
   totalTests++;
   try {
     testFn();
-    console.log(`✅ ${name}`);
+    console.log(`${name}`);
     testResults.push({ name, status: "PASSED", error: null });
     passedTests++;
   } catch (error) {
-    console.log(`❌ ${name}: ${error.message}`);
+    console.log(` ${name}: ${error.message}`);
     testResults.push({ name, status: "FAILED", error: error.message });
   }
 }
@@ -219,7 +219,7 @@ const logContent = `# Milestone 2 Precompile Registry Test Results (Minimal)
 ${testResults
   .map(
     (test) =>
-      `${test.status === "PASSED" ? "✅" : "❌"} ${test.name}: ${test.status}${
+      `${test.status === "PASSED" ? "" : ""} ${test.name}: ${test.status}${
         test.error ? ` - ${test.error}` : ""
       }`
   )
@@ -234,8 +234,8 @@ ${testResults
 ## Status
 ${
   passedTests === totalTests
-    ? "✅ All tests passed successfully!"
-    : "❌ Some tests failed. Check the details above."
+    ? "All tests passed successfully!"
+    : " Some tests failed. Check the details above."
 }
 
 ## Note

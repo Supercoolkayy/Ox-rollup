@@ -54,7 +54,11 @@ export class ArbGasInfoHandler implements PrecompileHandler {
     };
 
     // Try to load gas config from file
-    this.gasConfigPath = path.join(process.cwd(), "node_state", "gas_config.json");
+    this.gasConfigPath = path.join(
+      process.cwd(),
+      "node_state",
+      "gas_config.json"
+    );
     this.loadGasConfig();
   }
 
@@ -66,32 +70,44 @@ export class ArbGasInfoHandler implements PrecompileHandler {
       if (fs.existsSync(this.gasConfigPath)) {
         const configData = fs.readFileSync(this.gasConfigPath, "utf8");
         const gasConfig = JSON.parse(configData);
-        
+
         // Update config with file values
         if (gasConfig.l1BaseFee) {
           this.config.l1BaseFee = BigInt(gasConfig.l1BaseFee);
         }
-        
+
         if (gasConfig.gasPriceComponents) {
           const components = gasConfig.gasPriceComponents;
           if (components.l2BaseFee) {
-            this.config.gasPriceComponents.l2BaseFee = BigInt(components.l2BaseFee);
+            this.config.gasPriceComponents.l2BaseFee = BigInt(
+              components.l2BaseFee
+            );
           }
           if (components.l1CalldataCost) {
-            this.config.gasPriceComponents.l1CalldataCost = BigInt(components.l1CalldataCost);
+            this.config.gasPriceComponents.l1CalldataCost = BigInt(
+              components.l1CalldataCost
+            );
           }
           if (components.l1StorageCost) {
-            this.config.gasPriceComponents.l1StorageCost = BigInt(components.l1StorageCost);
+            this.config.gasPriceComponents.l1StorageCost = BigInt(
+              components.l1StorageCost
+            );
           }
           if (components.congestionFee) {
-            this.config.gasPriceComponents.congestionFee = BigInt(components.congestionFee);
+            this.config.gasPriceComponents.congestionFee = BigInt(
+              components.congestionFee
+            );
           }
         }
 
-        console.log(`📊 Loaded gas config from ${this.gasConfigPath}`);
+        console.log(` Loaded gas config from ${this.gasConfigPath}`);
       }
     } catch (error) {
-      console.warn(`⚠️ Failed to load gas config: ${error instanceof Error ? error.message : String(error)}`);
+      console.warn(
+        `Failed to load gas config: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
     }
   }
 
@@ -196,7 +212,8 @@ export class ArbGasInfoHandler implements PrecompileHandler {
    */
   private calculateL1GasFees(calldata: Uint8Array): bigint {
     const calldataSize = calldata.length;
-    const l1GasUsed = calldataSize * Number(this.config.gasPriceComponents.l1CalldataCost);
+    const l1GasUsed =
+      calldataSize * Number(this.config.gasPriceComponents.l1CalldataCost);
     return BigInt(l1GasUsed) * this.config.l1BaseFee;
   }
 
@@ -209,7 +226,7 @@ export class ArbGasInfoHandler implements PrecompileHandler {
     const view = new DataView(data.buffer);
 
     let offset = 0;
-    
+
     // L2 base fee
     view.setBigUint64(
       offset + 24,
@@ -217,7 +234,7 @@ export class ArbGasInfoHandler implements PrecompileHandler {
       false
     );
     offset += 32;
-    
+
     // L1 calldata cost per byte
     view.setBigUint64(
       offset + 24,
@@ -225,7 +242,7 @@ export class ArbGasInfoHandler implements PrecompileHandler {
       false
     );
     offset += 32;
-    
+
     // L1 storage cost (always 0 in Nitro)
     view.setBigUint64(
       offset + 24,
@@ -233,7 +250,7 @@ export class ArbGasInfoHandler implements PrecompileHandler {
       false
     );
     offset += 32;
-    
+
     // Base L2 gas price (same as L2 base fee)
     view.setBigUint64(
       offset + 24,
@@ -241,7 +258,7 @@ export class ArbGasInfoHandler implements PrecompileHandler {
       false
     );
     offset += 32;
-    
+
     // Congestion fee
     view.setBigUint64(
       offset + 24,
@@ -280,7 +297,7 @@ export class ArbGasInfoHandler implements PrecompileHandler {
     const view = new DataView(data.buffer);
 
     let offset = 0;
-    
+
     // L2 base fee
     view.setBigUint64(
       offset + 24,
@@ -288,7 +305,7 @@ export class ArbGasInfoHandler implements PrecompileHandler {
       false
     );
     offset += 32;
-    
+
     // L1 calldata cost per byte
     view.setBigUint64(
       offset + 24,
@@ -296,7 +313,7 @@ export class ArbGasInfoHandler implements PrecompileHandler {
       false
     );
     offset += 32;
-    
+
     // L1 storage cost (always 0 in Nitro)
     view.setBigUint64(
       offset + 24,
@@ -342,7 +359,7 @@ export class ArbGasInfoHandler implements PrecompileHandler {
     context: ExecutionContext
   ): PrecompileResult {
     const l1GasFees = this.calculateL1GasFees(calldata);
-    
+
     return {
       success: true,
       data: this.encodeUint256(Number(l1GasFees)),
@@ -392,8 +409,12 @@ export class ArbGasInfoHandler implements PrecompileHandler {
    */
   public getGasConfigSummary(): string {
     return `Gas Config:
-  L1 Base Fee: ${this.config.l1BaseFee} wei (${Number(this.config.l1BaseFee) / 1e9} gwei)
-  L2 Base Fee: ${this.config.gasPriceComponents.l2BaseFee} wei (${Number(this.config.gasPriceComponents.l2BaseFee) / 1e9} gwei)
+  L1 Base Fee: ${this.config.l1BaseFee} wei (${
+      Number(this.config.l1BaseFee) / 1e9
+    } gwei)
+  L2 Base Fee: ${this.config.gasPriceComponents.l2BaseFee} wei (${
+      Number(this.config.gasPriceComponents.l2BaseFee) / 1e9
+    } gwei)
   L1 Calldata Cost: ${this.config.gasPriceComponents.l1CalldataCost} gas/byte
   L1 Storage Cost: ${this.config.gasPriceComponents.l1StorageCost} gas
   Congestion Fee: ${this.config.gasPriceComponents.congestionFee} wei`;

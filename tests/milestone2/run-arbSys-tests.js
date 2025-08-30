@@ -23,7 +23,7 @@ async function main() {
     HardhatPrecompileRegistry = registryModule.HardhatPrecompileRegistry;
     ArbSysHandler = arbSysModule.ArbSysHandler;
   } catch (error) {
-    console.error("❌ Failed to import compiled modules:", error.message);
+    console.error(" Failed to import compiled modules:", error.message);
     process.exit(1);
   }
 
@@ -36,10 +36,10 @@ async function main() {
     totalTests++;
     try {
       testFn();
-      console.log(`✅ ${name}`);
+      console.log(`${name}`);
       passedTests++;
     } catch (error) {
-      console.log(`❌ ${name}: ${error.message}`);
+      console.log(` ${name}: ${error.message}`);
       failedTests++;
     }
   }
@@ -162,7 +162,7 @@ async function main() {
     // For now, just verify the selectors are documented
     // In a full test, we would test each function call
     console.log(
-      "   📝 Documented method selectors:",
+      "    Documented method selectors:",
       expectedSelectors.join(", ")
     );
   });
@@ -176,17 +176,17 @@ async function main() {
   );
 
   if (failedTests === 0) {
-    console.log("\n✅ All tests passed successfully!");
-    console.log("🚀 ArbSys handler is working correctly!");
+    console.log("\nAll tests passed successfully!");
+    console.log(" ArbSys handler is working correctly!");
     process.exit(0);
   } else {
-    console.log(`\n❌ ${failedTests} test(s) failed`);
+    console.log(`\n ${failedTests} test(s) failed`);
     process.exit(1);
   }
 }
 
 // Run the main function
 main().catch((error) => {
-  console.error("❌ Test runner failed:", error.message);
+  console.error(" Test runner failed:", error.message);
   process.exit(1);
 });

@@ -1,6 +1,6 @@
 # Milestone 2 Step 2: ArbSys Handler Implementation
 
-**Status**: ✅ COMPLETED
+**Status**: COMPLETED
 
 ## Overview
 
@@ -12,10 +12,10 @@ Step 2 successfully implemented the ArbSys precompile handler with the required 
 
 **Implemented Methods:**
 
-- ✅ `arbChainID()` - Returns configurable chain ID
-- ✅ `arbBlockNumber()` - Returns current block number from context
-- ✅ `sendTxToL1()` - Mock implementation with L1 message queue
-- ✅ `mapL1SenderContractAddressToL2Alias()` - Address aliasing function
+- `arbChainID()` - Returns configurable chain ID
+- `arbBlockNumber()` - Returns current block number from context
+- `sendTxToL1()` - Mock implementation with L1 message queue
+- `mapL1SenderContractAddressToL2Alias()` - Address aliasing function
 
 **Key Features:**
 
@@ -125,7 +125,7 @@ const handler = new ArbSysHandler({
 
 ## Test Results
 
-**Status**: ✅ ALL TESTS PASSED
+**Status**: ALL TESTS PASSED
 
 - **Total Tests**: 6
 - **Passed**: 6
@@ -134,14 +134,14 @@ const handler = new ArbSysHandler({
 
 ## Files Modified/Created
 
-| File                                        | Purpose                  | Status      |
-| ------------------------------------------- | ------------------------ | ----------- |
-| `src/hardhat-patch/precompiles/arbSys.ts`   | Enhanced ArbSys handler  | ✅ Modified |
-| `src/hardhat-patch/precompiles/registry.ts` | Added L1 message queue   | ✅ Modified |
-| `tests/milestone2/arbSys.test.ts`           | Comprehensive test suite | ✅ Created  |
-| `probes/hardhat/ArbProbes.sol`              | Solidity test contract   | ✅ Created  |
-| `tests/milestone2/run-arbSys-tests.js`      | Simple test runner       | ✅ Created  |
-| `tests/logs/step2-arbSys.log`               | Test results log         | ✅ Created  |
+| File                                        | Purpose                  | Status   |
+| ------------------------------------------- | ------------------------ | -------- |
+| `src/hardhat-patch/precompiles/arbSys.ts`   | Enhanced ArbSys handler  | Modified |
+| `src/hardhat-patch/precompiles/registry.ts` | Added L1 message queue   | Modified |
+| `tests/milestone2/arbSys.test.ts`           | Comprehensive test suite | Created  |
+| `probes/hardhat/ArbProbes.sol`              | Solidity test contract   | Created  |
+| `tests/milestone2/run-arbSys-tests.js`      | Simple test runner       | Created  |
+| `tests/logs/step2-arbSys.log`               | Test results log         | Created  |
 
 ## Next Steps
 

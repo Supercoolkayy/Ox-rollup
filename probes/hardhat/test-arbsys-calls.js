@@ -211,7 +211,7 @@ async function main() {
 
   // Summary
   console.log("\n" + "=".repeat(60));
-  console.log("📊 PROBE RESULTS SUMMARY");
+  console.log(" PROBE RESULTS SUMMARY");
   console.log("=".repeat(60));
 
   console.log(
@@ -238,7 +238,7 @@ async function main() {
   } else if (enabledCount === 3) {
     console.log("\n🎉 All Arbitrum features are working correctly!");
   } else {
-    console.log("\n⚠️  Partial Arbitrum support detected");
+    console.log("\n Partial Arbitrum support detected");
   }
 
   console.log("\n" + "=".repeat(60));

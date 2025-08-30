@@ -33,6 +33,7 @@
     "typescript": "^4.7.0"
   },
   "dependencies": {
+    "ethers": "^5.8.0",
     "hardhat": "^2.0.0"
   },
   "engines": {

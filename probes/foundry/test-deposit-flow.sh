@@ -41,7 +41,7 @@ check_anvil() {
             $ANVIL_RPC)
         
         ACTUAL_CHAIN_ID=$(echo $CHAIN_ID_RESPONSE | jq -r '.result' 2>/dev/null || echo "unknown")
-        echo "   📊 Current chain ID: $ACTUAL_CHAIN_ID"
+        echo "    Current chain ID: $ACTUAL_CHAIN_ID"
         
         return 0
     else
@@ -63,7 +63,7 @@ test_precompiles() {
     
     if [ "$ARBSYS_CODE" != "0x" ]; then
         echo -e "   ${GREEN} ArbSys precompile is accessible${NC}"
-        echo "   📊 Code size: ${#ARBSYS_CODE} characters"
+        echo "    Code size: ${#ARBSYS_CODE} characters"
     else
         echo -e "   ${RED} ArbSys precompile not found${NC}"
         echo "   💡 Arbitrum features may not be enabled"
@@ -77,7 +77,7 @@ test_precompiles() {
     
     if [ "$ARBGASINFO_CODE" != "0x" ]; then
         echo -e "   ${GREEN} ArbGasInfo precompile is accessible${NC}"
-        echo "   📊 Code size: ${#ARBGASINFO_CODE} characters"
+        echo "    Code size: ${#ARBGASINFO_CODE} characters"
     else
         echo -e "   ${RED} ArbGasInfo precompile not found${NC}"
         echo "   💡 Arbitrum features may not be enabled"
@@ -99,7 +99,7 @@ test_deposit_transaction() {
         return 1
     fi
     
-    echo "   📊 Test account: $ACCOUNT_ADDRESS"
+    echo "    Test account: $ACCOUNT_ADDRESS"
     
     # Get account balance
     BALANCE=$(curl -s -X POST -H "Content-Type: application/json" \
@@ -107,7 +107,7 @@ test_deposit_transaction() {
         $ANVIL_RPC | jq -r '.result' 2>/dev/null || echo "0x0")
     
     BALANCE_ETH=$(printf "%.4f" $(echo "scale=6; $(echo $BALANCE | sed 's/0x//' | tr 'a-f' 'A-F') / 1000000000000000000" | bc -l 2>/dev/null || echo "0"))
-    echo "   📊 Account balance: $BALANCE_ETH ETH"
+    echo "    Account balance: $BALANCE_ETH ETH"
     
     # Test sending a transaction with type 0x7e
     echo "   🔍 Testing transaction type 0x7e..."
@@ -136,7 +136,7 @@ test_deposit_transaction() {
     
     if [ -n "$TX_HASH" ] && [ "$TX_HASH" != "null" ]; then
         echo -e "   ${GREEN} Transaction type 0x7e accepted!${NC}"
-        echo "   📊 Transaction hash: $TX_HASH"
+        echo "    Transaction hash: $TX_HASH"
         return 0
     else
         echo -e "   ${RED} Transaction type 0x7e not supported${NC}"
@@ -167,7 +167,7 @@ test_rpc_compatibility() {
     
     if [ -n "$RAW_TX_RESULT" ] && [ "$RAW_TX_RESULT" != "null" ]; then
         echo -e "   ${GREEN} eth_sendRawTransaction accepted 0x7e transaction${NC}"
-        echo "   📊 Result: $RAW_TX_RESULT"
+        echo "    Result: $RAW_TX_RESULT"
         return 0
     else
         echo -e "   ${RED} eth_sendRawTransaction rejected 0x7e transaction${NC}"
@@ -206,7 +206,7 @@ test_gas_estimation() {
     if [ -n "$GAS_ESTIMATE_RESULT" ] && [ "$GAS_ESTIMATE_RESULT" != "null" ]; then
         echo -e "   ${GREEN} Gas estimation successful for 0x7e transaction${NC}"
         GAS_ESTIMATE_DECIMAL=$(printf "%d" $GAS_ESTIMATE_RESULT)
-        echo "   📊 Estimated gas: $GAS_ESTIMATE_DECIMAL"
+        echo "    Estimated gas: $GAS_ESTIMATE_DECIMAL"
         return 0
     else
         echo -e "   ${RED} Gas estimation failed for 0x7e transaction${NC}"
@@ -232,7 +232,7 @@ run_foundry_tests() {
             # Run the Arbitrum precompile tests
             echo "    Running Arbitrum precompile tests..."
             forge test --match-contract ArbitrumPrecompileTest -vvv || {
-                echo -e "   ${YELLOW}⚠️  Some tests failed (expected without Arbitrum support)${NC}"
+                echo -e "   ${YELLOW} Some tests failed (expected without Arbitrum support)${NC}"
             }
         else
             echo "    Not in a Foundry project directory"
@@ -247,7 +247,7 @@ run_foundry_tests() {
 # Function to generate summary
 generate_summary() {
     echo -e "\n${BLUE}==================================================================${NC}"
-    echo -e "${BLUE}📊 DEPOSIT TRANSACTION FLOW PROBE RESULTS SUMMARY${NC}"
+    echo -e "${BLUE} DEPOSIT TRANSACTION FLOW PROBE RESULTS SUMMARY${NC}"
     echo -e "${BLUE}==================================================================${NC}"
     
     # Count successful tests
@@ -279,7 +279,7 @@ generate_summary() {
     elif [ $SUCCESS_COUNT -eq $TOTAL_TESTS ]; then
         echo -e "\n${GREEN}🎉 Full Arbitrum support is working in Anvil!${NC}"
     else
-        echo -e "\n${YELLOW}⚠️  Partial Arbitrum support detected${NC}"
+        echo -e "\n${YELLOW} Partial Arbitrum support detected${NC}"
         echo "   Some features work, but full 0x7e support requires implementation"
     fi
     

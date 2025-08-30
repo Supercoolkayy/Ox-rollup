@@ -20,7 +20,7 @@ try {
   ArbSysHandler = arbSysModule.ArbSysHandler;
   ArbGasInfoHandler = arbGasInfoModule.ArbGasInfoHandler;
 } catch (error) {
-  console.error("❌ Failed to import compiled modules:", error.message);
+  console.error(" Failed to import compiled modules:", error.message);
   process.exit(1);
 }
 
@@ -33,10 +33,10 @@ function test(name, testFn) {
   totalTests++;
   try {
     testFn();
-    console.log(`✅ ${name}`);
+    console.log(`${name}`);
     passedTests++;
   } catch (error) {
-    console.log(`❌ ${name}: ${error.message}`);
+    console.log(` ${name}: ${error.message}`);
     failedTests++;
   }
 }
@@ -251,9 +251,9 @@ console.log(`Failed: ${failedTests}`);
 console.log(`Success Rate: ${((passedTests / totalTests) * 100).toFixed(1)}%`);
 
 if (failedTests === 0) {
-  console.log("\n✅ All tests passed successfully!");
+  console.log("\nAll tests passed successfully!");
   process.exit(0);
 } else {
-  console.log(`\n❌ ${failedTests} test(s) failed`);
+  console.log(`\n ${failedTests} test(s) failed`);
   process.exit(1);
 }

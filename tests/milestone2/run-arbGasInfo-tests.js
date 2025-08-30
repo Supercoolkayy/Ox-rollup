@@ -23,7 +23,7 @@ async function main() {
     HardhatPrecompileRegistry = registryModule.HardhatPrecompileRegistry;
     ArbGasInfoHandler = arbGasInfoModule.ArbGasInfoHandler;
   } catch (error) {
-    console.error("❌ Failed to import compiled modules:", error.message);
+    console.error(" Failed to import compiled modules:", error.message);
     process.exit(1);
   }
 
@@ -36,10 +36,10 @@ async function main() {
     totalTests++;
     try {
       testFn();
-      console.log(`✅ ${name}`);
+      console.log(`${name}`);
       passedTests++;
     } catch (error) {
-      console.log(`❌ ${name}: ${error.message}`);
+      console.log(` ${name}: ${error.message}`);
       failedTests++;
     }
   }
@@ -106,7 +106,9 @@ async function main() {
       throw new Error(`Expected l1BaseFee 15e9, got ${config.l1BaseFee}`);
     }
     if (config.gasPriceComponents.l2BaseFee !== BigInt(800000000)) {
-      throw new Error(`Expected l2BaseFee 800000000, got ${config.gasPriceComponents.l2BaseFee}`);
+      throw new Error(
+        `Expected l2BaseFee 800000000, got ${config.gasPriceComponents.l2BaseFee}`
+      );
     }
   });
 
@@ -139,7 +141,7 @@ async function main() {
     // Test the private calculateL1GasFees method
     const testCalldata = new Uint8Array([0x12, 0x34, 0x56, 0x78, 0x9a]); // 5 bytes
     const l1GasFees = handler["calculateL1GasFees"](testCalldata);
-    
+
     // Expected: 5 bytes * 16 gas per byte * 20 gwei = 1,600,000,000,000 wei
     const expectedFees = BigInt(5) * BigInt(16) * BigInt(20e9);
     if (l1GasFees !== expectedFees) {
@@ -160,7 +162,7 @@ async function main() {
     });
 
     const summary = handler.getGasConfigSummary();
-    
+
     if (!summary.includes("L1 Base Fee: 20000000000 wei (20 gwei)")) {
       throw new Error("Gas config summary missing L1 base fee");
     }
@@ -182,7 +184,7 @@ async function main() {
     // For now, just verify the selectors are documented
     // In a full test, we would test each function call
     console.log(
-      "   📝 Documented method selectors:",
+      "    Documented method selectors:",
       expectedSelectors.join(", ")
     );
   });
@@ -196,17 +198,17 @@ async function main() {
   );
 
   if (failedTests === 0) {
-    console.log("\n✅ All tests passed successfully!");
-    console.log("🚀 ArbGasInfo handler is working correctly!");
+    console.log("\nAll tests passed successfully!");
+    console.log(" ArbGasInfo handler is working correctly!");
     process.exit(0);
   } else {
-    console.log(`\n❌ ${failedTests} test(s) failed`);
+    console.log(`\n ${failedTests} test(s) failed`);
     process.exit(1);
   }
 }
 
 // Run the main function
 main().catch((error) => {
-  console.error("❌ Test runner failed:", error.message);
+  console.error(" Test runner failed:", error.message);
   process.exit(1);
 });

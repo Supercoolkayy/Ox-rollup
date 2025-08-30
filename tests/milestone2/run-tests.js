@@ -58,7 +58,7 @@ ${stdout}
 ${stderr}
 
 ## Summary
-${code === 0 ? "✅ All tests passed" : "❌ Some tests failed"}
+${code === 0 ? "All tests passed" : " Some tests failed"}
 `;
 
   const logPath = path.join(
@@ -69,12 +69,12 @@ ${code === 0 ? "✅ All tests passed" : "❌ Some tests failed"}
   );
   fs.writeFileSync(logPath, logContent);
 
-  console.log(`\n📝 Test results saved to: ${logPath}`);
+  console.log(`\n Test results saved to: ${logPath}`);
 
   process.exit(code);
 });
 
 testProcess.on("error", (error) => {
-  console.error("❌ Failed to start test process:", error.message);
+  console.error(" Failed to start test process:", error.message);
   process.exit(1);
 });
