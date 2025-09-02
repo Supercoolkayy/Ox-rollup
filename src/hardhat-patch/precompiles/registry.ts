@@ -21,12 +21,18 @@ export interface PrecompileHandler {
   name: string; // "ArbSys" | "ArbGasInfo" | ...
   tags: string[]; // ["arbitrum","precompile"]
   handleCall(calldata: Uint8Array, ctx: PrecompileContext): Promise<Uint8Array>;
+  gasCost?(calldata: Uint8Array): number; // Optional gas cost calculation
 }
 
 export interface PrecompileRegistry {
   register(h: PrecompileHandler): void;
   getByAddress(addr: string): PrecompileHandler | undefined;
   list(): PrecompileHandler[];
+  handleCall(
+    address: string,
+    calldata: Uint8Array,
+    context: ExecutionContext
+  ): Promise<PrecompileResult>;
 }
 
 // L1 Message Queue for sendTxToL1 simulation
@@ -184,11 +190,14 @@ export class HardhatPrecompileRegistry
 
       const result = await handler.handleCall(calldata, precompileContext);
 
+      // Calculate gas used based on the handler's gas cost
+      const gasUsed = handler.gasCost ? handler.gasCost(calldata) : 0;
+
       // Convert Uint8Array result to PrecompileResult
       return {
         success: true,
         data: result,
-        gasUsed: 0, // Will be calculated by caller
+        gasUsed: gasUsed,
       };
     } catch (error) {
       return {
@@ -232,6 +241,6 @@ export class HardhatL1MessageQueue implements L1MessageQueue {
 /**
  * Create a new precompile registry instance
  */
-export function createRegistry(): PrecompileRegistry {
+export function createRegistry(): HardhatPrecompileRegistry {
   return new HardhatPrecompileRegistry();
 }

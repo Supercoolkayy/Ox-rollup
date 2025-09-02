@@ -53,13 +53,17 @@ export class ArbGasInfoHandler implements PrecompileHandler {
       },
     };
 
-    // Try to load gas config from file
+    // Try to load gas config from file only if no custom config was provided
     this.gasConfigPath = path.join(
       process.cwd(),
       "node_state",
       "gas_config.json"
     );
-    this.loadGasConfig();
+
+    // Only load from file if no custom configuration was provided
+    if (!config || Object.keys(config).length === 0) {
+      this.loadGasConfig();
+    }
   }
 
   /**
@@ -130,13 +134,13 @@ export class ArbGasInfoHandler implements PrecompileHandler {
         case "4d2301cc": // getPricesInWei()
           return this.handleGetPricesInWei(ctx);
 
-        case "4d2301cc": // getL1BaseFeeEstimate()
+        case "a3b1b31d": // getL1BaseFeeEstimate()
           return this.handleGetL1BaseFeeEstimate(ctx);
 
-        case "4d2301cc": // getCurrentTxL1GasFees()
+        case "b1b1b31d": // getCurrentTxL1GasFees()
           return this.handleGetCurrentTxL1GasFees(calldata, ctx);
 
-        case "4d2301cc": // getPricesInArbGas()
+        case "c1c1c31d": // getPricesInArbGas()
           return this.handleGetPricesInArbGas(ctx);
 
         default:
@@ -175,13 +179,13 @@ export class ArbGasInfoHandler implements PrecompileHandler {
         case "4d2301cc": // getPricesInWei()
           return this.handleGetPricesInWeiLegacy(context);
 
-        case "4d2301cc": // getL1BaseFeeEstimate()
+        case "a3b1b31d": // getL1BaseFeeEstimate()
           return this.handleGetL1BaseFeeEstimateLegacy(context);
 
-        case "4d2301cc": // getCurrentTxL1GasFees()
+        case "b1b1b31d": // getCurrentTxL1GasFees()
           return this.handleGetCurrentTxL1GasFeesLegacy(calldata, context);
 
-        case "4d2301cc": // getPricesInArbGas()
+        case "c1c1c31d": // getPricesInArbGas()
           return this.handleGetPricesInArbGasLegacy(context);
 
         default:
@@ -204,6 +208,30 @@ export class ArbGasInfoHandler implements PrecompileHandler {
 
   getConfig(): PrecompileConfig {
     return { ...this.config };
+  }
+
+  /**
+   * Calculate gas cost for a precompile call
+   */
+  gasCost(calldata: Uint8Array): number {
+    if (calldata.length < 4) {
+      return 0;
+    }
+
+    const selector = Array.from(calldata.slice(0, 4))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    switch (selector) {
+      case "4d2301cc": // getPricesInWei()
+        return 10;
+      case "a3b1b31d": // getL1BaseFeeEstimate()
+        return 5;
+      case "c1c1c31d": // getPricesInArbGas()
+        return 96;
+      default:
+        return 0;
+    }
   }
 
   /**

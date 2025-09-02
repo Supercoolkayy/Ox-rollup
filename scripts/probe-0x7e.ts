@@ -32,7 +32,7 @@ async function main() {
     validateSignatures: true,
   });
 
-  console.log("✅ 0x7e transaction support initialized\n");
+  console.log(" 0x7e transaction support initialized\n");
 
   // Test 1: Basic Transaction Creation and Parsing
   console.log("1. Testing Basic Transaction Creation and Parsing...");
@@ -55,7 +55,7 @@ async function main() {
 
   const validation = parser.validateTransaction(mockTx);
   console.log(
-    `   ✅ Validation result: ${validation.isValid ? "PASSED" : "FAILED"}`
+    `    Validation result: ${validation.isValid ? "PASSED" : "FAILED"}`
   );
 
   if (validation.errors.length > 0) {
@@ -76,7 +76,7 @@ async function main() {
   console.log(`   🔍 First byte: 0x${encoded[0].toString(16)}`);
 
   const parsed = parser.parseTransaction(encoded);
-  console.log(`   ✅ Parse result: ${parsed.success ? "SUCCESS" : "FAILED"}`);
+  console.log(`    Parse result: ${parsed.success ? "SUCCESS" : "FAILED"}`);
 
   if (parsed.success && parsed.transaction) {
     console.log(
@@ -91,7 +91,7 @@ async function main() {
 
   const processResult = await processor.processTransaction(encoded);
   console.log(
-    `   ✅ Processing result: ${processResult.success ? "SUCCESS" : "FAILED"}`
+    `    Processing result: ${processResult.success ? "SUCCESS" : "FAILED"}`
   );
 
   if (processResult.success) {
@@ -106,7 +106,7 @@ async function main() {
 
   const gasResult = await processor.estimateGas(encoded);
   console.log(
-    `   ✅ Gas estimation: ${gasResult.success ? "SUCCESS" : "FAILED"}`
+    `    Gas estimation: ${gasResult.success ? "SUCCESS" : "FAILED"}`
   );
 
   if (gasResult.success) {
@@ -122,7 +122,7 @@ async function main() {
 
   const callResult = await processor.callStatic(encoded);
   console.log(
-    `   ✅ Call simulation: ${callResult.success ? "SUCCESS" : "FAILED"}`
+    `    Call simulation: ${callResult.success ? "SUCCESS" : "FAILED"}`
   );
 
   if (callResult.success) {
@@ -138,19 +138,17 @@ async function main() {
   console.log("   🔌 Extended provider methods:");
   console.log(
     `      - processDepositTransaction: ${
-      typeof extendedProvider.processDepositTransaction === "function"
-        ? "✅"
-        : ""
+      typeof extendedProvider.processDepositTransaction === "function" ? "" : ""
     }`
   );
   console.log(
     `      - estimateDepositGas: ${
-      typeof extendedProvider.estimateDepositGas === "function" ? "✅" : ""
+      typeof extendedProvider.estimateDepositGas === "function" ? "" : ""
     }`
   );
   console.log(
     `      - callDepositStatic: ${
-      typeof extendedProvider.callDepositStatic === "function" ? "✅" : ""
+      typeof extendedProvider.callDepositStatic === "function" ? "" : ""
     }`
   );
 
@@ -184,7 +182,7 @@ async function main() {
 
   console.log(`   📦 Batch processing: ${batchResults.length} transactions`);
   const successCount = batchResults.filter((r) => r.success).length;
-  console.log(`   ✅ Successful: ${successCount}/${batchResults.length}`);
+  console.log(`    Successful: ${successCount}/${batchResults.length}`);
 
   // Test 10: Error Handling
   console.log("\n10. Testing Error Handling...");
@@ -220,7 +218,7 @@ async function main() {
   ];
 
   tests.forEach((test) => {
-    const status = test.result ? "✅ PASSED" : " FAILED";
+    const status = test.result ? " PASSED" : " FAILED";
     console.log(`${status} ${test.name}`);
   });
 

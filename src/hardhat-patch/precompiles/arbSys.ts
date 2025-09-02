@@ -75,9 +75,6 @@ export class ArbSysHandler implements PrecompileHandler {
         case "051038f2": // arbBlockNumber()
           return this.handleArbBlockNumber(ctx);
 
-        case "4d2301cc": // arbBlockHash(uint256)
-          return this.handleArbBlockHash(calldata, ctx);
-
         case "4d2301cc": // arbOSVersion()
           return this.handleArbOSVersion(ctx);
 
@@ -161,6 +158,32 @@ export class ArbSysHandler implements PrecompileHandler {
 
   getConfig(): PrecompileConfig {
     return { ...this.config };
+  }
+
+  /**
+   * Calculate gas cost for a precompile call
+   */
+  gasCost(calldata: Uint8Array): number {
+    if (calldata.length < 4) {
+      return 0;
+    }
+
+    const selector = Array.from(calldata.slice(0, 4))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    switch (selector) {
+      case "a3b1b31d": // arbChainID()
+      case "051038f2": // arbBlockNumber()
+      case "4d2301cc": // arbOSVersion()
+        return 3;
+      case "6e8c1d6f": // sendTxToL1()
+        return 100;
+      case "a0c12269": // mapL1SenderContractAddressToL2Alias()
+        return 50;
+      default:
+        return 0;
+    }
   }
 
   private handleArbChainID(ctx: PrecompileContext): Uint8Array {
@@ -404,11 +427,17 @@ export class ArbSysHandler implements PrecompileHandler {
     // Apply aliasing
     const l2Alias = l1BigInt + aliasingConstant;
 
-    // Convert back to 32-byte array
-    const buffer = new ArrayBuffer(32);
-    const view = new DataView(buffer);
-    view.setBigUint64(24, l2Alias, false);
-    return new Uint8Array(buffer);
+    // Convert back to 32-byte array (big-endian)
+    const result = new Uint8Array(32);
+    let value = l2Alias;
+
+    // Convert BigInt to bytes (big-endian)
+    for (let i = 31; i >= 0; i--) {
+      result[i] = Number(value & BigInt(0xff));
+      value = value >> BigInt(8);
+    }
+
+    return result;
   }
 
   /**

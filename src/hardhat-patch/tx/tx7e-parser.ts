@@ -54,7 +54,7 @@ export interface ValidationResult {
  * according to Arbitrum's specification
  */
 export class Tx7eParser {
-  private readonly DEPOSIT_TX_TYPE = 126 as const;
+  public readonly DEPOSIT_TX_TYPE = 0x7e;
   private readonly MIN_GAS_LIMIT = 21000;
   private readonly MAX_GAS_LIMIT = 30_000_000; // 30M gas limit
 

@@ -9,7 +9,7 @@ import { expect } from "chai";
 import { HardhatPrecompileRegistry } from "../../src/hardhat-patch/precompiles/registry";
 import { ArbSysHandler } from "../../src/hardhat-patch/precompiles/arbSys";
 import { ArbGasInfoHandler } from "../../src/hardhat-patch/precompiles/arbGasInfo";
-import { HardhatArbitrumPatch } from "../../src/hardhat-patch";
+import { HardhatArbitrumPatch } from "../../src/hardhat-patch/arbitrum-patch";
 
 describe("Precompile Registry", () => {
   let registry: HardhatPrecompileRegistry;
@@ -138,7 +138,7 @@ describe("Precompile Registry", () => {
     });
 
     it("should handle ArbGasInfo getL1BaseFeeEstimate() call", async () => {
-      const calldata = new Uint8Array([0x4d, 0x23, 0x01, 0xcc]); // getL1BaseFeeEstimate() selector
+      const calldata = new Uint8Array([0xa3, 0xb1, 0xb3, 0x1d]); // getL1BaseFeeEstimate() selector
       const context = {
         blockNumber: 12345,
         chainId: 42161,
@@ -259,7 +259,7 @@ describe("Precompile Registry", () => {
 
       expect(patch.hasHandler("0x0000000000000000000000000000000000000064")).to
         .be.true; // ArbSys
-      expect(patch.hasHandler("0x000000000000000000000000000000000000006C")).to
+      expect(patch.hasHandler("0x000000000000000000000000000000000000006c")).to
         .be.true; // ArbGasInfo
 
       const handlers = patch.listHandlers();

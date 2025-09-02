@@ -6,7 +6,10 @@
 
 import { expect } from "chai";
 import { ethers } from "ethers";
-import { Tx7eParser, DepositTransaction } from "../../src/hardhat-patch";
+import {
+  Tx7eParser,
+  DepositTransaction,
+} from "../../src/hardhat-patch/tx/tx7e-parser";
 
 describe("Simple Transaction Type 0x7e Support", () => {
   let parser: Tx7eParser;
@@ -18,7 +21,7 @@ describe("Simple Transaction Type 0x7e Support", () => {
   describe("Basic Functionality", () => {
     it("should create a parser instance", () => {
       expect(parser).to.be.instanceOf(Tx7eParser);
-      expect(parser.DEPOSIT_TX_TYPE).to.equal(0x7e);
+      expect((parser as any).DEPOSIT_TX_TYPE).to.equal(0x7e);
     });
 
     it("should create mock deposit transactions", () => {
@@ -50,7 +53,7 @@ describe("Simple Transaction Type 0x7e Support", () => {
 
     it("should reject invalid transaction types", () => {
       const tx = parser.createMockDepositTransaction();
-      const invalidTx = { ...tx, type: 0x00 };
+      const invalidTx = { ...tx, type: 0x00 as any };
       const validation = parser.validateTransaction(invalidTx);
 
       expect(validation.isValid).to.be.false;

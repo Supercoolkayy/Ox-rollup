@@ -213,7 +213,7 @@ class TransactionStressTest {
       const failureCount = completed - successCount;
 
       console.log(
-        `✅ Batch ${
+        ` Batch ${
           batch + 1
         } completed: ${completed}/${totalTransactions} (${successCount} success, ${failureCount} failed)`
       );
@@ -356,9 +356,9 @@ class TransactionStressTest {
     }
 
     if (issues.length === 0) {
-      console.log("\n✅ No issues detected - stress test passed!");
+      console.log("\n No issues detected - stress test passed!");
     } else {
-      console.log("\n⚠️  Potential issues detected:");
+      console.log("\n  Potential issues detected:");
       issues.forEach((issue) => console.log(`  - ${issue}`));
     }
 
@@ -469,7 +469,7 @@ ${report.testResults
 ${
   report.issues.length === 0
     ? "✅ STRESS TEST PASSED - No memory leaks or crashes detected"
-    : "⚠️ ISSUES DETECTED - Review the issues above"
+    : " ISSUES DETECTED - Review the issues above"
 }
 `;
 

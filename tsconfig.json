@@ -13,8 +13,22 @@
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@tests/*": ["tests/*"]
+    }
   },
   "include": ["src/**/*.ts", "tests/**/*.ts"],
-  "exclude": ["node_modules", "dist", "probes/**/*"]
+  "exclude": ["node_modules", "dist", "probes/**/*", "crates/**/*"],
+  "ts-node": {
+    "require": ["ts-node/register"],
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  }
 }

@@ -13,7 +13,7 @@
 import { expect } from "chai";
 import { HardhatPrecompileRegistry } from "../../src/hardhat-patch/precompiles/registry";
 import { ArbGasInfoHandler } from "../../src/hardhat-patch/precompiles/arbGasInfo";
-import { HardhatArbitrumPatch } from "../../src/hardhat-patch";
+import { HardhatArbitrumPatch } from "../../src/hardhat-patch/arbitrum-patch";
 
 describe("ArbGasInfo Precompile Handler", () => {
   let registry: HardhatPrecompileRegistry;
@@ -68,7 +68,7 @@ describe("ArbGasInfo Precompile Handler", () => {
     });
 
     it("should handle getL1BaseFeeEstimate() correctly", async () => {
-      const calldata = new Uint8Array([0x4d, 0x23, 0x01, 0xcc]); // getL1BaseFeeEstimate() selector
+      const calldata = new Uint8Array([0xa3, 0xb1, 0xb3, 0x1d]); // getL1BaseFeeEstimate() selector
       const context = {
         blockNumber: 12345,
         chainId: 42161,
@@ -93,7 +93,7 @@ describe("ArbGasInfo Precompile Handler", () => {
     });
 
     it("should handle getCurrentTxL1GasFees() correctly", async () => {
-      const calldata = new Uint8Array([0x4d, 0x23, 0x01, 0xcc]); // getCurrentTxL1GasFees() selector
+      const calldata = new Uint8Array([0xb1, 0xb1, 0xb3, 0x1d]); // getCurrentTxL1GasFees() selector
       const context = {
         blockNumber: 12345,
         chainId: 42161,
@@ -120,7 +120,7 @@ describe("ArbGasInfo Precompile Handler", () => {
     });
 
     it("should handle getPricesInArbGas() correctly", async () => {
-      const calldata = new Uint8Array([0x4d, 0x23, 0x01, 0xcc]); // getPricesInArbGas() selector
+      const calldata = new Uint8Array([0xc1, 0xc1, 0xc3, 0x1d]); // getPricesInArbGas() selector
       const context = {
         blockNumber: 12345,
         chainId: 42161,
@@ -203,9 +203,9 @@ describe("ArbGasInfo Precompile Handler", () => {
 
       const config = customHandler.getConfig();
       expect(config.l1BaseFee).to.equal(BigInt(25e9));
-      expect(config.gasPriceComponents.l2BaseFee).to.equal(BigInt(2e9));
-      expect(config.gasPriceComponents.l1CalldataCost).to.equal(BigInt(20));
-      expect(config.gasPriceComponents.congestionFee).to.equal(BigInt(1e8));
+      expect(config.gasPriceComponents!.l2BaseFee).to.equal(BigInt(2e9));
+      expect(config.gasPriceComponents!.l1CalldataCost).to.equal(BigInt(20));
+      expect(config.gasPriceComponents!.congestionFee).to.equal(BigInt(1e8));
     });
   });
 
@@ -295,7 +295,7 @@ describe("ArbGasInfo Precompile Handler", () => {
 
   describe("Integration with HardhatArbitrumPatch", () => {
     it("should be properly registered in the patch", () => {
-      const registry = patch.getRegistry();
+      const registry = patch.getRegistry() as HardhatPrecompileRegistry;
       const handlers = registry.list();
 
       expect(handlers).to.have.length(2);
@@ -308,7 +308,7 @@ describe("ArbGasInfo Precompile Handler", () => {
     });
 
     it("should handle calls through the patch registry", async () => {
-      const registry = patch.getRegistry();
+      const registry = patch.getRegistry() as HardhatPrecompileRegistry;
 
       const calldata = new Uint8Array([0x4d, 0x23, 0x01, 0xcc]); // getPricesInWei()
       const context = {

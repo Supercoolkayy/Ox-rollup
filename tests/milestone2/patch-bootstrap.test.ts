@@ -5,10 +5,12 @@
  * initialized and attached to a mock runtime environment.
  */
 
+import { expect } from "chai";
 import {
   initArbitrumPatch,
   HardhatArbitrumPatch,
-} from "../../src/hardhat-patch";
+} from "../../src/hardhat-patch/arbitrum-patch";
+import { HardhatPrecompileRegistry } from "../../src/hardhat-patch/precompiles/registry";
 
 describe("Plugin Bootstrap", () => {
   let mockHre: any;
@@ -36,7 +38,7 @@ describe("Plugin Bootstrap", () => {
 
       // Verify the registry contains the expected handlers
       const plugin = mockHre.arbitrumPatch as HardhatArbitrumPatch;
-      const registry = plugin.getRegistry();
+      const registry = plugin.getRegistry() as HardhatPrecompileRegistry;
       const handlers = registry.list();
 
       expect(handlers).to.have.length(2);
@@ -88,7 +90,7 @@ describe("Plugin Bootstrap", () => {
       // Initialize the plugin
       initArbitrumPatch(mockHre, { enable: true });
       const plugin = mockHre.arbitrumPatch as HardhatArbitrumPatch;
-      const registry = plugin.getRegistry();
+      const registry = plugin.getRegistry() as HardhatPrecompileRegistry;
 
       // Test registry methods
       expect(registry.list()).to.have.length(2);
@@ -104,7 +106,7 @@ describe("Plugin Bootstrap", () => {
       // Initialize the plugin
       initArbitrumPatch(mockHre, { enable: true });
       const plugin = mockHre.arbitrumPatch as HardhatArbitrumPatch;
-      const registry = plugin.getRegistry();
+      const registry = plugin.getRegistry() as HardhatPrecompileRegistry;
 
       // Test a simple precompile call
       const calldata = new Uint8Array([0xa3, 0xb1, 0xb3, 0x1d]); // arbChainID()

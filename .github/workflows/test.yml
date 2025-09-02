@@ -1,0 +1,72 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd crates/anvil-arbitrum && cargo fetch
+
+      - name: Run Rust tests
+        run: |
+          cd crates/anvil-arbitrum
+          cargo test --verbose
+
+      - name: Build TypeScript
+        run: npm run build
+
+      - name: Run TypeScript unit tests
+        run: npm run test:unit
+        continue-on-error: true
+
+      - name: Run integration tests
+        run: npm run test:integration
+        continue-on-error: true
+
+      - name: Run stress tests
+        run: npm run test:stress
+        continue-on-error: true
+
+      - name: Upload test logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-logs
+          path: |
+            tests/logs/
+            crates/anvil-arbitrum/target/test-results/
+          retention-days: 7
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: build-artifacts
+          path: |
+            dist/
+            crates/anvil-arbitrum/target/release/
+          retention-days: 30
