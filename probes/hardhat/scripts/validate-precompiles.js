@@ -8,7 +8,7 @@
 const { ethers } = require("hardhat");
 
 async function main() {
-  console.log("🔍 Validating Arbitrum Precompiles in Hardhat Context...\n");
+  console.log(" Validating Arbitrum Precompiles in Hardhat Context...\n");
 
   // Get the Hardhat runtime environment
   const hre = require("hardhat");
@@ -21,19 +21,19 @@ async function main() {
     process.exit(1);
   }
 
-  console.log("✅ Arbitrum patch found in HRE");
+  console.log("Arbitrum patch found in HRE");
 
   // Test registry functionality
   const registry = arbitrumPatch.getRegistry();
   const handlers = registry.list();
 
-  console.log(`📋 Found ${handlers.length} precompile handlers:`);
+  console.log(` Found ${handlers.length} precompile handlers:`);
   handlers.forEach((handler) => {
     console.log(`   ${handler.name}: ${handler.address}`);
   });
 
   // Test ArbSys arbChainID
-  console.log("\n🔧 Testing ArbSys arbChainID...");
+  console.log("\n Testing ArbSys arbChainID...");
   const arbSysCalldata = new Uint8Array([0xa3, 0xb1, 0xb3, 0x1d]); // arbChainID()
   const context = {
     blockNumber: 12345,
@@ -54,7 +54,7 @@ async function main() {
       24,
       false
     );
-    console.log(`✅ ArbSys arbChainID returned: ${Number(chainId)}`);
+    console.log(`ArbSys arbChainID returned: ${Number(chainId)}`);
   } else {
     console.log("❌ ArbSys arbChainID failed");
   }
@@ -75,7 +75,7 @@ async function main() {
       false
     );
     console.log(
-      `✅ ArbGasInfo getL1BaseFeeEstimate returned: ${Number(l1BaseFee)} wei (${
+      `ArbGasInfo getL1BaseFeeEstimate returned: ${Number(l1BaseFee)} wei (${
         Number(l1BaseFee) / 1e9
       } gwei)`
     );
@@ -90,12 +90,12 @@ async function main() {
     const arbProbes = await ArbProbesFactory.deploy();
     await arbProbes.deployed();
 
-    console.log(`✅ ArbProbes contract deployed at: ${arbProbes.address}`);
+    console.log(`ArbProbes contract deployed at: ${arbProbes.address}`);
 
     // Try to call ArbSys through the contract
     try {
       const chainId = await arbProbes.getArbChainId();
-      console.log(`✅ Contract ArbSys call returned: ${chainId}`);
+      console.log(`Contract ArbSys call returned: ${chainId}`);
     } catch (error) {
       console.log(
         `⚠️  Contract ArbSys call failed (expected for unpatched nodes): ${error.message}`
@@ -105,7 +105,7 @@ async function main() {
     // Try to call ArbGasInfo through the contract
     try {
       const l1GasFees = await arbProbes.getCurrentTxL1GasFees();
-      console.log(`✅ Contract ArbGasInfo call returned: ${l1GasFees}`);
+      console.log(`Contract ArbGasInfo call returned: ${l1GasFees}`);
     } catch (error) {
       console.log(
         `⚠️  Contract ArbGasInfo call failed (expected for unpatched nodes): ${error.message}`
@@ -115,7 +115,7 @@ async function main() {
     console.log(`❌ Contract deployment failed: ${error.message}`);
   }
 
-  console.log("\n🎉 Precompile validation completed!");
+  console.log("\n Precompile validation completed!");
 }
 
 main()

@@ -35,7 +35,7 @@ contract ArbitrumPrecompileTest is Test {
     }
     
     function testArbSysPrecompileAccessibility() public view {
-        console.log("🔍 Testing ArbSys precompile accessibility...");
+        console.log(" Testing ArbSys precompile accessibility...");
         
         // Check if precompile has code
         uint256 codeSize = ARBSYS_ADDRESS.code.length;
@@ -53,7 +53,7 @@ contract ArbitrumPrecompileTest is Test {
     }
     
     function testArbGasInfoPrecompileAccessibility() public view {
-        console.log("\n🔍 Testing ArbGasInfo precompile accessibility...");
+        console.log("\n Testing ArbGasInfo precompile accessibility...");
         
         // Check if precompile has code
         uint256 codeSize = ARBGASINFO_ADDRESS.code.length;
@@ -71,7 +71,7 @@ contract ArbitrumPrecompileTest is Test {
     }
     
     function testArbSysMethods() public {
-        console.log("\n🔍 Testing ArbSys precompile methods...");
+        console.log("\n Testing ArbSys precompile methods...");
         
         // Test arbChainID()
         console.log("   Testing arbChainID()...");
@@ -105,7 +105,7 @@ contract ArbitrumPrecompileTest is Test {
     }
     
     function testArbGasInfoMethods() public {
-        console.log("\n🔍 Testing ArbGasInfo precompile methods...");
+        console.log("\n Testing ArbGasInfo precompile methods...");
         
         // Test getPricesInWei()
         console.log("   Testing getPricesInWei()...");
@@ -139,7 +139,7 @@ contract ArbitrumPrecompileTest is Test {
     }
     
     function testGasCalculationAccuracy() public view {
-        console.log("\n🔍 Testing gas calculation accuracy...");
+        console.log("\n Testing gas calculation accuracy...");
         
         // Get current block gas limit
         uint256 gasLimit = block.gaslimit;
@@ -150,7 +150,7 @@ contract ArbitrumPrecompileTest is Test {
         console.log("    Current transaction gas price:", gasPrice);
         
         // Try to get L1 base fee estimate from ArbGasInfo
-        console.log("   🔍 Attempting to get L1 base fee estimate...");
+        console.log("    Attempting to get L1 base fee estimate...");
         
         // This is a view function call that might fail
         try this.callArbGasInfo(GET_L1_BASE_FEE_ESTIMATE) {

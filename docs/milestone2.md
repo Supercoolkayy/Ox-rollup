@@ -5,6 +5,7 @@ This document provides comprehensive setup instructions, testing guides, and exp
 ## Overview
 
 Milestone 2 implements:
+
 - **ArbSys Precompile**: Chain ID, block number, OS version, L1 messaging
 - **ArbGasInfo Precompile**: Gas pricing, L1 fee estimation, gas calculations
 - **Transaction Type 0x7e**: Deposit transaction support
@@ -14,12 +15,14 @@ Milestone 2 implements:
 ## Prerequisites
 
 ### System Requirements
+
 - **Node.js**: v18.x or v20.x (recommended: v20.x)
 - **Rust**: Latest stable toolchain
 - **Git**: For version control
 - **WSL**: For Windows users (recommended)
 
 ### Development Tools
+
 - **VS Code** or **Cursor**: Recommended IDE
 - **Hardhat**: Ethereum development framework
 - **Foundry**: For Solidity testing (optional)
@@ -75,6 +78,7 @@ cd ../..
 The project supports Arbitrum precompiles through configuration flags:
 
 #### Hardhat Configuration
+
 ```typescript
 // hardhat.config.ts
 import "../../src/hardhat-patch";
@@ -97,6 +101,7 @@ const config: HardhatUserConfig = {
 ```
 
 #### Environment Variables
+
 ```bash
 # Enable debug logging
 export DEBUG=true
@@ -108,10 +113,10 @@ export ARBITRUM_CHAIN_ID=42161
 
 ### Precompile Addresses
 
-| Precompile | Address | Functionality |
-|------------|---------|---------------|
-| ArbSys | `0x0000000000000000000000000000000000000064` | Chain info, L1 messaging |
-| ArbGasInfo | `0x000000000000000000000000000000000000006c` | Gas pricing, L1 fees |
+| Precompile | Address                                      | Functionality            |
+| ---------- | -------------------------------------------- | ------------------------ |
+| ArbSys     | `0x0000000000000000000000000000000000000064` | Chain info, L1 messaging |
+| ArbGasInfo | `0x000000000000000000000000000000000000006c` | Gas pricing, L1 fees     |
 
 ## Testing Guide
 
@@ -328,31 +333,31 @@ forge test --gas-report
 Arbitrum precompile handlers registered successfully
    ArbSys: 0x0000000000000000000000000000000000000064
    ArbGasInfo: 0x000000000000000000000000000000000000006c
-✅ Hardhat Arbitrum Patch initialized
+Hardhat Arbitrum Patch initialized
 ```
 
 ### 3. Precompile Validation Output
 
 ```
-🔍 Validating Arbitrum Precompiles in Hardhat Context...
+ Validating Arbitrum Precompiles in Hardhat Context...
 
-✅ Arbitrum patch found in HRE
-📋 Found 2 precompile handlers:
+Arbitrum patch found in HRE
+ Found 2 precompile handlers:
    ArbSys: 0x0000000000000000000000000000000000000064
    ArbGasInfo: 0x000000000000000000000000000000000000006c
 
-🔧 Testing ArbSys arbChainID...
-✅ ArbSys arbChainID returned: 42161
+ Testing ArbSys arbChainID...
+ArbSys arbChainID returned: 42161
 
-⛽ Testing ArbGasInfo getL1BaseFeeEstimate...
-✅ ArbGasInfo getL1BaseFeeEstimate returned: 20000000000 wei (20 gwei)
+ Testing ArbGasInfo getL1BaseFeeEstimate...
+ArbGasInfo getL1BaseFeeEstimate returned: 20000000000 wei (20 gwei)
 
 📄 Testing contract deployment and precompile calls...
-✅ ArbProbes contract deployed at: 0x5FbDB2315678afecb367f032d93F642f64180aa3
+ArbProbes contract deployed at: 0x5FbDB2315678afecb367f032d93F642f64180aa3
 ⚠️  Contract ArbSys call failed (expected for unpatched nodes): call revert exception
 ⚠️  Contract ArbGasInfo call failed (expected for unpatched nodes): call revert exception
 
-🎉 Precompile validation completed!
+ Precompile validation completed!
 ```
 
 ### 4. Rust Test Output
@@ -383,12 +388,14 @@ test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
 ### Common Issues
 
 1. **Node.js Version Issues**
+
    ```bash
    # Use nvm to switch Node.js versions
    nvm use 20
    ```
 
 2. **Rust Compilation Errors**
+
    ```bash
    # Update Rust toolchain
    rustup update
@@ -397,6 +404,7 @@ test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
    ```
 
 3. **Hardhat Plugin Not Loading**
+
    ```bash
    # Check plugin import in hardhat.config.ts
    import "../../src/hardhat-patch";
@@ -420,6 +428,7 @@ npm test
 ## Performance Benchmarks
 
 ### Test Execution Times
+
 - **Unit Tests**: ~3 seconds (82 tests)
 - **Integration Tests**: ~5 seconds
 - **Stress Tests**: ~10 seconds
@@ -427,6 +436,7 @@ npm test
 - **Hardhat Tests**: ~5 seconds
 
 ### Memory Usage
+
 - **Node.js Process**: ~100MB
 - **Rust Process**: ~50MB
 - **Total Test Suite**: ~150MB
@@ -434,6 +444,7 @@ npm test
 ## CI/CD Integration
 
 The project includes GitHub Actions workflows that run:
+
 - Multi-version Node.js testing (18.x, 20.x)
 - Rust compilation and testing
 - TypeScript compilation and testing
@@ -443,6 +454,7 @@ The project includes GitHub Actions workflows that run:
 ## Next Steps
 
 After completing Milestone 2:
+
 1. **Milestone 3**: Full EVM integration
 2. **Performance Optimization**: Gas cost optimization
 3. **Production Deployment**: Mainnet integration
@@ -451,6 +463,7 @@ After completing Milestone 2:
 ## Support
 
 For issues or questions:
+
 1. Check the troubleshooting section above
 2. Review test logs in `tests/logs/`
 3. Enable debug mode for detailed output

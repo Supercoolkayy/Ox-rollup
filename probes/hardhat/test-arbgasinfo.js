@@ -362,7 +362,7 @@ async function main() {
   console.log("\n" + "=".repeat(70));
 
   if (workingMethods === totalMethods) {
-    console.log("🎉 All ArbGasInfo methods are working correctly!");
+    console.log(" All ArbGasInfo methods are working correctly!");
   } else if (workingMethods >= totalMethods * 0.7) {
     console.log(" Most ArbGasInfo methods are working, some issues detected");
   } else {

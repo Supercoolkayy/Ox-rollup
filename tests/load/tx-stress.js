@@ -276,7 +276,7 @@ class TransactionStressTest {
     console.log(`  Average Duration: ${avgDuration.toFixed(2)}ms`);
     console.log(`  Min Duration: ${minDuration}ms`);
     console.log(`  Max Duration: ${maxDuration}ms`);
-    console.log(`\n⛽ Gas Usage:`);
+    console.log(`\n Gas Usage:`);
     console.log(`  Total Gas Used: ${totalGasUsed}`);
     console.log(`  Average Gas per Transaction: ${avgGasUsed.toFixed(2)}`);
     console.log(`\n🧠 Memory Usage:`);
@@ -468,7 +468,7 @@ ${report.testResults
 ## Status
 ${
   report.issues.length === 0
-    ? "✅ STRESS TEST PASSED - No memory leaks or crashes detected"
+    ? "STRESS TEST PASSED - No memory leaks or crashes detected"
     : " ISSUES DETECTED - Review the issues above"
 }
 `;

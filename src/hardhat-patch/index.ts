@@ -36,7 +36,7 @@ try {
 
       // Log successful initialization only in debug mode
       if (process.env.DEBUG) {
-        console.log("✅ Hardhat Arbitrum Patch initialized");
+        console.log("Hardhat Arbitrum Patch initialized");
       }
     }
   });

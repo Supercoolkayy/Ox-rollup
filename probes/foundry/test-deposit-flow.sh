@@ -56,7 +56,7 @@ test_precompiles() {
     echo -e "\n${YELLOW}2. Testing Arbitrum precompile accessibility...${NC}"
     
     # Test ArbSys precompile (0x64)
-    echo "   🔍 Testing ArbSys precompile (0x64)..."
+    echo "    Testing ArbSys precompile (0x64)..."
     ARBSYS_CODE=$(curl -s -X POST -H "Content-Type: application/json" \
         --data "{\"jsonrpc\":\"2.0\",\"method\":\"eth_getCode\",\"params\":[\"0x0000000000000000000000000000000000000064\",\"latest\"],\"id\":1}" \
         $ANVIL_RPC | jq -r '.result' 2>/dev/null || echo "0x")
@@ -70,7 +70,7 @@ test_precompiles() {
     fi
     
     # Test ArbGasInfo precompile (0x6C)
-    echo "   🔍 Testing ArbGasInfo precompile (0x6C)..."
+    echo "    Testing ArbGasInfo precompile (0x6C)..."
     ARBGASINFO_CODE=$(curl -s -X POST -H "Content-Type: application/json" \
         --data "{\"jsonrpc\":\"2.0\",\"method\":\"eth_getCode\",\"params\":[\"0x000000000000000000000000000000000000006C\",\"latest\"],\"id\":1}" \
         $ANVIL_RPC | jq -r '.result' 2>/dev/null || echo "0x")
@@ -89,7 +89,7 @@ test_deposit_transaction() {
     echo -e "\n${YELLOW}3. Testing deposit transaction (0x7e) support...${NC}"
     
     # Get test account address
-    echo "   🔍 Getting test account address..."
+    echo "    Getting test account address..."
     ACCOUNT_ADDRESS=$(curl -s -X POST -H "Content-Type: application/json" \
         --data "{\"jsonrpc\":\"2.0\",\"method\":\"eth_accounts\",\"params\":[],\"id\":1}" \
         $ANVIL_RPC | jq -r ".result[$TEST_ACCOUNT_INDEX]" 2>/dev/null || echo "")
@@ -110,7 +110,7 @@ test_deposit_transaction() {
     echo "    Account balance: $BALANCE_ETH ETH"
     
     # Test sending a transaction with type 0x7e
-    echo "   🔍 Testing transaction type 0x7e..."
+    echo "    Testing transaction type 0x7e..."
     
     # Create a mock deposit transaction
     DEPOSIT_TX='{
@@ -153,7 +153,7 @@ test_rpc_compatibility() {
     echo -e "\n${YELLOW}4. Testing RPC compatibility for deposit transactions...${NC}"
     
     # Test eth_sendRawTransaction with 0x7e transaction
-    echo "   🔍 Testing eth_sendRawTransaction..."
+    echo "    Testing eth_sendRawTransaction..."
     
     # Create a mock raw transaction (this won't work without 0x7e support)
     MOCK_RAW_TX="0x7e$(openssl rand -hex 64)"
@@ -184,7 +184,7 @@ test_gas_estimation() {
     echo -e "\n${YELLOW}5. Testing gas estimation for deposit transactions...${NC}"
     
     # Test gas estimation for a 0x7e transaction
-    echo "   🔍 Testing gas estimation..."
+    echo "    Testing gas estimation..."
     
     GAS_ESTIMATE_RESPONSE=$(curl -s -X POST -H "Content-Type: application/json" \
         --data '{
@@ -277,7 +277,7 @@ generate_summary() {
         echo "   3. Extend transaction type parsing for 0x7e"
         echo "   4. Rebuild and run custom Anvil instance"
     elif [ $SUCCESS_COUNT -eq $TOTAL_TESTS ]; then
-        echo -e "\n${GREEN}🎉 Full Arbitrum support is working in Anvil!${NC}"
+        echo -e "\n${GREEN} Full Arbitrum support is working in Anvil!${NC}"
     else
         echo -e "\n${YELLOW} Partial Arbitrum support detected${NC}"
         echo "   Some features work, but full 0x7e support requires implementation"

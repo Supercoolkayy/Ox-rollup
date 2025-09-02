@@ -177,6 +177,6 @@ export function initArbitrumPatch(
     // Attach to the environment for access in tasks and scripts
     (hre as any).arbitrumPatch = arbitrumPatch;
 
-    console.log("✅ Hardhat Arbitrum Patch initialized");
+    console.log("Hardhat Arbitrum Patch initialized");
   }
 }

@@ -1,7 +1,7 @@
 const { ethers } = require("ethers");
 
 async function main() {
-  console.log("🔍 Probing 0x7e transaction type support on Hardhat...\n");
+  console.log(" Probing 0x7e transaction type support on Hardhat...\n");
 
   // Create a provider and signer for local Hardhat
   const provider = new ethers.providers.JsonRpcProvider(

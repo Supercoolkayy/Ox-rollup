@@ -122,7 +122,7 @@ async function testTransactionTypeSupport() {
     const [signer] = await ethers.getSigners();
     const signerAddress = await signer.getAddress();
 
-    console.log("   🔍 Testing transaction type 0x7e acceptance...");
+    console.log("    Testing transaction type 0x7e acceptance...");
 
     // Create a mock deposit transaction
     const mockDepositTx = {
@@ -167,7 +167,7 @@ async function testRPCCompatibility() {
 
   try {
     // Test eth_sendRawTransaction with 0x7e transaction
-    console.log("   🔍 Testing eth_sendRawTransaction...");
+    console.log("    Testing eth_sendRawTransaction...");
 
     // Create a mock raw transaction (this won't work without 0x7e support)
     const mockRawTx = "0x7e" + ethers.utils.randomBytes(64).toString("hex");
@@ -214,7 +214,7 @@ async function testContractInteraction() {
     console.log(`    Test contract deployed at: ${testContract.address}`);
 
     // Test if the contract can access Arbitrum-specific features
-    console.log("   🔍 Testing contract access to Arbitrum features...");
+    console.log("    Testing contract access to Arbitrum features...");
 
     try {
       // Try to call ArbSys precompile from the contract
@@ -302,7 +302,7 @@ async function main() {
     console.log("   3. Implement RLP parsing for deposit transactions");
     console.log("   4. Add RPC handling for 0x7e transactions");
   } else if (supportedFeatures === 5) {
-    console.log("\n🎉 Full deposit transaction support is working!");
+    console.log("\n Full deposit transaction support is working!");
   } else {
     console.log("\n Partial deposit transaction support detected");
     console.log(

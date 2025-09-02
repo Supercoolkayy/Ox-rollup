@@ -19,7 +19,7 @@ import {
 } from "../src/hardhat-patch";
 
 async function main() {
-  console.log("🔍 Probing 0x7e Transaction Type Support...\n");
+  console.log(" Probing 0x7e Transaction Type Support...\n");
 
   // Initialize components
   const parser = new Tx7eParser();
@@ -73,7 +73,7 @@ async function main() {
 
   const encoded = parser.encodeTransaction(mockTx);
   console.log(`   📦 Encoded transaction: ${encoded.length} bytes`);
-  console.log(`   🔍 First byte: 0x${encoded[0].toString(16)}`);
+  console.log(`    First byte: 0x${encoded[0].toString(16)}`);
 
   const parsed = parser.parseTransaction(encoded);
   console.log(`    Parse result: ${parsed.success ? "SUCCESS" : "FAILED"}`);
@@ -126,7 +126,7 @@ async function main() {
   );
 
   if (callResult.success) {
-    console.log(`   📤 Return data: ${callResult.returnData}`);
+    console.log(`    Return data: ${callResult.returnData}`);
   } else {
     console.log(`    Error: ${callResult.error}`);
   }
@@ -156,7 +156,7 @@ async function main() {
   console.log("\n8. Testing Transaction Summary...");
 
   const summary = parser.getTransactionSummary(mockTx);
-  console.log("   📋 Transaction summary:");
+  console.log("    Transaction summary:");
   console.log(summary);
 
   // Test 9: Batch Processing
@@ -232,7 +232,7 @@ async function main() {
 
   if (passedTests === totalTests) {
     console.log(
-      "\n🎉 All tests passed! 0x7e transaction support is working correctly."
+      "\n All tests passed! 0x7e transaction support is working correctly."
     );
   } else {
     console.log(

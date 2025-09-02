@@ -28,7 +28,7 @@ const ARBSYS_METHODS = {
 };
 
 async function testArbSysPrecompile() {
-  console.log("🔍 Testing ArbSys Precompile (0x64)...\n");
+  console.log(" Testing ArbSys Precompile (0x64)...\n");
 
   try {
     // Test basic precompile accessibility
@@ -115,7 +115,7 @@ async function testArbSysPrecompile() {
 }
 
 async function testArbGasInfoPrecompile() {
-  console.log("\n🔍 Testing ArbGasInfo Precompile (0x6C)...\n");
+  console.log("\n Testing ArbGasInfo Precompile (0x6C)...\n");
 
   try {
     const code = await ethers.provider.getCode(ARBGASINFO_ADDRESS);
@@ -151,7 +151,7 @@ async function testArbGasInfoPrecompile() {
 }
 
 async function testDepositTransaction() {
-  console.log("\n🔍 Testing Transaction Type 0x7e (Deposit)...\n");
+  console.log("\n Testing Transaction Type 0x7e (Deposit)...\n");
 
   try {
     console.log("4. Testing deposit transaction parsing...");
@@ -236,7 +236,7 @@ async function main() {
     console.log("   npm install hardhat-arbitrum-local");
     console.log("   // Add to hardhat.config.js");
   } else if (enabledCount === 3) {
-    console.log("\n🎉 All Arbitrum features are working correctly!");
+    console.log("\n All Arbitrum features are working correctly!");
   } else {
     console.log("\n Partial Arbitrum support detected");
   }

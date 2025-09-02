@@ -92,7 +92,7 @@ export class Tx7eProcessor {
       const txHash = this.parser.getTransactionHash(tx);
 
       // Log transaction details for debugging
-      // console.log("🔍 Processing 0x7e deposit transaction:");
+      // console.log(" Processing 0x7e deposit transaction:");
       // console.log(this.parser.getTransactionSummary(tx));
       // console.log(` Transaction hash: ${txHash}`);
 

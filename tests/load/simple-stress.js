@@ -196,7 +196,7 @@ class SimpleTransactionStressTest {
 
   async runStressTest(totalTransactions = 500) {
     console.log(
-      `🚀 Starting Simple Transaction Stress Test: ${totalTransactions} transactions`
+      `Starting Simple Transaction Stress Test: ${totalTransactions} transactions`
     );
     console.log(`⏰ Start time: ${new Date().toISOString()}`);
 
@@ -271,7 +271,7 @@ class SimpleTransactionStressTest {
     const memoryGrowth = finalMemory.heapUsed - initialMemory.heapUsed;
     const memoryGrowthMB = (memoryGrowth / 1024 / 1024).toFixed(2);
 
-    console.log("\n📊 Stress Test Results Analysis");
+    console.log("\nStress Test Results Analysis");
     console.log("=================================");
     console.log(`Total Transactions: ${totalTransactions}`);
     console.log(
@@ -290,7 +290,7 @@ class SimpleTransactionStressTest {
     console.log(`  Average Duration: ${avgDuration.toFixed(2)}ms`);
     console.log(`  Min Duration: ${minDuration}ms`);
     console.log(`  Max Duration: ${maxDuration}ms`);
-    console.log(`\n⛽ Gas Usage:`);
+    console.log(`\n Gas Usage:`);
     console.log(`  Total Gas Used: ${totalGasUsed}`);
     console.log(`  Average Gas per Transaction: ${avgGasUsed.toFixed(2)}`);
     console.log(`\n🧠 Memory Usage:`);
