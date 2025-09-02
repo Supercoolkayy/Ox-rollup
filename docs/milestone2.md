@@ -1,454 +1,457 @@
 # Milestone 2: Arbitrum Precompile & 0x7e Transaction Support
 
-This document provides comprehensive setup instructions, usage examples, and testing procedures for Milestone 2 of the ox-rollup project.
+This document provides comprehensive setup instructions, testing guides, and expected outputs for Milestone 2 of the ox-rollup project.
 
 ## Overview
 
-Milestone 2 implements Arbitrum-specific features within an Anvil (Foundry) fork, including:
-
-- **ArbSys Precompile** (0x64): Chain ID, block number, OS version queries
-- **ArbGasInfo Precompile** (0x6C): L1 gas fee calculations and price information
-- **0x7e Transaction Type**: Deposit transaction parsing and processing
-- **Hardhat Integration**: Plugin for seamless development workflow
+Milestone 2 implements:
+- **ArbSys Precompile**: Chain ID, block number, OS version, L1 messaging
+- **ArbGasInfo Precompile**: Gas pricing, L1 fee estimation, gas calculations
+- **Transaction Type 0x7e**: Deposit transaction support
+- **Hardhat Plugin Integration**: Seamless integration with Hardhat development environment
+- **TypeScript Test Suite**: Comprehensive testing with 82 passing tests
 
 ## Prerequisites
 
 ### System Requirements
+- **Node.js**: v18.x or v20.x (recommended: v20.x)
+- **Rust**: Latest stable toolchain
+- **Git**: For version control
+- **WSL**: For Windows users (recommended)
 
-- **Rust**: 1.70+ (for core precompile implementation)
-- **Node.js**: 18+ (for TypeScript/JavaScript components)
-- **Git**: Latest version
-- **WSL2** (Windows users) or **Linux/macOS**
+### Development Tools
+- **VS Code** or **Cursor**: Recommended IDE
+- **Hardhat**: Ethereum development framework
+- **Foundry**: For Solidity testing (optional)
 
-### Required Tools
+## Setup Instructions
 
-- **Cargo**: Rust package manager
-- **npm**: Node.js package manager
-- **Foundry**: Ethereum development toolkit (optional, for advanced testing)
-
-## Installation
-
-### 1. Clone the Repository
+### 1. Clone and Install Dependencies
 
 ```bash
+# Clone the repository
 git clone <repository-url>
 cd ox-rollup
-```
 
-### 2. Install Rust Dependencies
-
-```bash
-cd crates/anvil-arbitrum
-cargo build
-```
-
-### 3. Install Node.js Dependencies
-
-```bash
+# Install Node.js dependencies
 npm install
-```
 
-### 4. Build TypeScript Components
-
-```bash
-npm run build
-```
-
-## Configuration
-
-### Arbitrum Configuration
-
-The system supports various Arbitrum configurations through CLI flags or configuration files:
-
-#### CLI Flags
-
-```bash
-# Enable Arbitrum features
---arbitrum
-
-# Set chain ID (default: 42161 for Arbitrum One)
---arb-chain-id 42161
-
-# Set ArbOS version (default: 20)
---arb-os-version 20
-
-# Set L1 base fee in wei (default: 20 gwei)
---l1-base-fee 20000000000
-
-# Enable 0x7e transaction processing
---enable-tx7e
-```
-
-#### Configuration File
-
-Create `node_state/gas_config.json`:
-
-```json
-{
-  "chainId": 42161,
-  "arbOSVersion": 20,
-  "l1BaseFee": "20000000000",
-  "gasPriceComponents": {
-    "l2BaseFee": "1000000000",
-    "l1CalldataCost": "16",
-    "l1StorageCost": "0",
-    "congestionFee": "0"
-  }
-}
-```
-
-## Usage
-
-### Running the Rust Implementation
-
-#### Basic Usage
-
-```bash
+# Install Rust dependencies
 cd crates/anvil-arbitrum
-cargo run -- --arbitrum --enable-tx7e
+cargo fetch
+cd ../..
 ```
 
-#### With Custom Configuration
+### 2. Environment Setup
 
 ```bash
-cargo run -- \
-  --arbitrum \
-  --arb-chain-id 421613 \
-  --arb-os-version 21 \
-  --l1-base-fee 15000000000 \
-  --enable-tx7e
+# Ensure you're in WSL (for Windows users)
+wsl
+
+# Verify Node.js version
+node --version  # Should be 18.x or 20.x
+
+# Verify Rust installation
+rustc --version
+cargo --version
 ```
 
-### Using the Hardhat Plugin
-
-#### 1. Install the Plugin
+### 3. Build the Project
 
 ```bash
-npm install ./src/hardhat-patch
+# Build TypeScript
+npm run build
+
+# Build Rust components
+cd crates/anvil-arbitrum
+cargo build --release
+cd ../..
 ```
 
-#### 2. Configure Hardhat
+## Arbitrum Configuration
 
-```javascript
-// hardhat.config.js
-require("@nomicfoundation/hardhat-toolbox");
-require("hardhat-arbitrum-patch");
+### Enabling Arbitrum Flags
 
-module.exports = {
+The project supports Arbitrum precompiles through configuration flags:
+
+#### Hardhat Configuration
+```typescript
+// hardhat.config.ts
+import "../../src/hardhat-patch";
+
+const config: HardhatUserConfig = {
   solidity: "0.8.19",
   networks: {
     hardhat: {
-      chainId: 42161,
+      chainId: 42161, // Arbitrum chain ID
     },
   },
+  // Configure Arbitrum patch
   arbitrum: {
     enabled: true,
     chainId: 42161,
     arbOSVersion: 20,
-    l1BaseFee: "20000000000",
+    l1BaseFee: BigInt("20000000000"), // 20 gwei
   },
 };
 ```
 
-#### 3. Use in Scripts
+#### Environment Variables
+```bash
+# Enable debug logging
+export DEBUG=true
 
-```javascript
-// scripts/test-precompiles.js
-const { HardhatArbitrumPatch } = require("hardhat-arbitrum-patch");
-
-async function main() {
-  const patch = new HardhatArbitrumPatch({
-    chainId: 42161,
-    arbOSVersion: 20,
-  });
-
-  const registry = patch.getRegistry();
-
-  // Test ArbSys
-  const arbSysCalldata = new Uint8Array([0xa3, 0xb1, 0xb3, 0x1d]); // arbChainID()
-  const result = await registry.handleCall(
-    "0x0000000000000000000000000000000000000064",
-    arbSysCalldata,
-    {
-      blockNumber: 12345,
-      chainId: 42161,
-      gasPrice: BigInt(1e9),
-      caller: "0x...",
-      callStack: [],
-    }
-  );
-
-  console.log("ArbSys result:", result);
-}
-
-main().catch(console.error);
+# Set custom gas configuration
+export ARBITRUM_L1_BASE_FEE=20000000000
+export ARBITRUM_CHAIN_ID=42161
 ```
 
-## Testing
+### Precompile Addresses
 
-### Running All Tests
+| Precompile | Address | Functionality |
+|------------|---------|---------------|
+| ArbSys | `0x0000000000000000000000000000000000000064` | Chain info, L1 messaging |
+| ArbGasInfo | `0x000000000000000000000000000000000000006c` | Gas pricing, L1 fees |
 
-#### Complete Test Suite
+## Testing Guide
 
-```bash
-npm run test:all
-```
-
-This command runs:
-
-1. Rust unit tests (`cargo test`)
-2. TypeScript unit tests (`npm run test:unit`)
-3. Integration tests (`npm run test:integration`)
-4. Stress tests (`npm run test:stress`)
-
-#### Individual Test Categories
-
-**Rust Tests:**
+### 1. Unit Tests
 
 ```bash
-npm run test:rust
-```
-
-**TypeScript Unit Tests:**
-
-```bash
+# Run all TypeScript unit tests
 npm run test:unit
+
+# Run specific test suites
+npm test -- --grep "ArbSys"
+npm test -- --grep "ArbGasInfo"
+npm test -- --grep "0x7e"
 ```
 
-**Integration Tests:**
+### 2. Integration Tests
 
 ```bash
+# Run integration tests
 npm run test:integration
+
+# Run specific integration tests
+npm test -- --grep "E2E Deposit Flow"
+npm test -- --grep "Golden Test"
 ```
 
-**Stress Tests:**
+### 3. Stress Tests
 
 ```bash
+# Run stress tests
 npm run test:stress
+
+# Run load tests
+node tests/load/simple-stress.js
+node tests/load/tx-stress.js
 ```
 
-### Test Categories
+### 4. Rust Tests
 
-#### 1. Unit Tests
+```bash
+# Run Rust precompile tests
+cd crates/anvil-arbitrum
+cargo test
 
-- **Rust**: Precompile handlers, transaction parsing, configuration
-- **TypeScript**: Plugin initialization, registry management
+# Run with verbose output
+cargo test --verbose
 
-#### 2. Integration Tests
-
-- **E2E Deposit Flow**: ERC20 deployment + 0x7e transaction processing
-- **Golden Tests**: Local vs forked Arbitrum RPC comparison
-- **Precompile Integration**: ArbSys and ArbGasInfo functionality
-
-#### 3. Stress Tests
-
-- **Transaction Processing**: 500 sequential deposit transactions
-- **Memory Leak Detection**: Long-running operation validation
-- **Performance Metrics**: Response time and resource usage
-
-### Expected Test Outputs
-
-#### Successful Rust Tests
-
-```
-running 21 tests
-test arbitrum::tests::test_config_validation ... ok
-test arbitrum::tests::test_default_config ... ok
-test precompiles::tests::test_arbgasinfo_calls ... ok
-test precompiles::tests::test_arbsys_calls ... ok
-test tx7e::tests::test_transaction_parsing ... ok
-...
-
-test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+# Run specific test modules
+cargo test arb_sys
+cargo test arb_gas_info
 ```
 
-#### Successful Integration Tests
+### 5. Hardhat Integration Tests
+
+```bash
+# Run Hardhat probe tests
+cd probes/hardhat
+npm install
+npx hardhat test
+
+# Validate precompiles
+npx hardhat run scripts/validate-precompiles.js
+
+# Test 0x7e transactions
+npx hardhat run scripts/probe-0x7e.ts
+```
+
+### 6. Foundry Tests
+
+```bash
+# Run Foundry tests
+cd probes/foundry
+forge test
+
+# Run with gas reporting
+forge test --gas-report
+```
+
+## Expected Test Outputs
+
+### 1. TypeScript Test Suite (82 tests)
 
 ```
   E2E Deposit Flow Integration
     ERC20 Contract Deployment
-      ✓ should deploy with correct initial state
-      ✓ should allow token transfers
+      ✔ should deploy with correct initial state
+      ✔ should allow token transfers
     ArbSys Precompile Integration
-      ✓ should return correct chain ID
+      ✔ should return correct chain ID
     ArbGasInfo Precompile Integration
-      ✓ should return correct gas information
+      ✔ should return correct gas information
+    0x7e Transaction Simulation
+      ✔ should handle deposit transaction format
+      ✔ should validate precompile calls within deposit context
+    State Validation
+      ✔ should maintain consistent state after operations
     Integration with Hardhat Arbitrum Patch
-      ✓ should have precompile handlers registered
-      ✓ should handle precompile calls correctly
+      ✔ should have precompile handlers registered
+      ✔ should handle precompile calls correctly
 
-  6 passing (2.5s)
+  ArbGasInfo Precompile Handler
+    Basic ArbGasInfo Methods
+      ✔ should handle getPricesInWei() correctly
+      ✔ should handle getL1BaseFeeEstimate() correctly
+      ✔ should handle getCurrentTxL1GasFees() correctly
+      ✔ should handle getPricesInArbGas() correctly
+    Gas Calculation Accuracy
+      ✔ should calculate L1 gas fees correctly for different calldata sizes
+      ✔ should handle large calldata sizes correctly
+      ✔ should respect custom gas price components
+    Configuration and Customization
+      ✔ should initialize with default configuration
+      ✔ should handle custom chain ID configuration
+      ✔ should provide human-readable gas configuration summary
+    Error Handling
+      ✔ should handle unknown function selectors gracefully
+      ✔ should handle invalid calldata gracefully
+    Integration with HardhatArbitrumPatch
+      ✔ should be properly registered in the patch
+      ✔ should handle calls through the patch registry
+    Gas Model Implementation
+      ✔ should implement Nitro baseline gas algorithm correctly
+      ✔ should handle zero calldata correctly
+      ✔ should handle single byte calldata correctly
+
+  ArbSys Precompile Handler
+    Basic ArbSys Methods
+      ✔ should handle arbChainID() correctly
+      ✔ should handle arbBlockNumber() correctly
+      ✔ should handle arbOSVersion() correctly
+    sendTxToL1 Functionality
+      ✔ should handle sendTxToL1() correctly
+      ✔ should reject sendTxToL1 with invalid calldata length
+    Address Aliasing Functionality
+      ✔ should handle mapL1SenderContractAddressToL2Alias() correctly
+      ✔ should reject mapL1SenderContractAddressToL2Alias with invalid calldata length
+    Configuration and Customization
+      ✔ should respect custom chain ID configuration
+      ✔ should use default configuration when not specified
+    Error Handling
+      ✔ should handle unknown function selectors gracefully
+      ✔ should handle invalid calldata gracefully
+    Integration with HardhatArbitrumPatch
+      ✔ should be properly registered in the patch
+      ✔ should handle calls through the patch registry
+
+  Plugin Bootstrap
+    initArbitrumPatch
+      ✔ should initialize plugin when enabled
+      ✔ should not initialize plugin when disabled
+      ✔ should respect config.enabled setting
+      ✔ should initialize with default configuration
+    Plugin Integration
+      ✔ should provide working registry methods
+      ✔ should handle precompile calls through registry
+
+  Precompile Registry
+    Handler Registration
+      ✔ should register handlers successfully
+      ✔ should prevent duplicate registration
+      ✔ should retrieve handlers by address
+      ✔ should return null for non-existent handlers
+    Handler Functionality
+      ✔ should handle ArbSys arbChainID() call
+      ✔ should handle ArbSys arbBlockNumber() call
+      ✔ should handle ArbGasInfo getPricesInWei() call
+      ✔ should handle ArbGasInfo getL1BaseFeeEstimate() call
+    Error Handling
+      ✔ should reject calls to non-existent precompiles gracefully
+      ✔ should handle invalid calldata gracefully
+      ✔ should handle unknown function selectors gracefully
+    HardhatArbitrumPatch Integration
+      ✔ should initialize with default configuration
+      ✔ should initialize with custom configuration
+      ✔ should register handlers on initialization
+      ✔ should be disabled when configured
+    Configuration Validation
+      ✔ should handle BigInt configuration values
+
+  Simple Transaction Type 0x7e Support
+    Basic Functionality
+      ✔ should create a parser instance
+      ✔ should create mock deposit transactions
+      ✔ should validate deposit transactions correctly
+      ✔ should reject invalid transaction types
+      ✔ should provide human-readable transaction summaries
+    Transaction Properties
+      ✔ should have correct transaction type
+      ✔ should have valid addresses
+      ✔ should have valid signature components
+      ✔ should have reasonable gas values
+
+  Transaction Type 0x7e Support
+    Tx7eParser
+      ✔ should create mock deposit transactions
+      ✔ should validate deposit transactions correctly
+      ✔ should reject invalid transaction types
+      ✔ should reject transactions with gas limit too low
+      ✔ should reject transactions with gas limit too high
+      ✔ should reject negative values
+      ✔ should reject invalid addresses
+      ✔ should reject invalid signature values
+      ✔ should detect contract creation correctly
+      ✔ should generate transaction hashes
+      ✔ should encode transactions to RLP format
+      ✔ should provide human-readable transaction summaries
+
+  82 passing (3s)
 ```
 
-#### Successful Stress Tests
+### 2. Hardhat Plugin Initialization
 
 ```
-🧪 Running Transaction Stress Test...
-Processing 500 transactions...
-✅ All transactions processed successfully
-📊 Results:
-   - Total Transactions: 500
-   - Success Rate: 100%
-   - Average Duration: 4.80ms
-   - Memory Growth: 0.60 MB
-   - No memory leaks detected
+Arbitrum precompile handlers registered successfully
+   ArbSys: 0x0000000000000000000000000000000000000064
+   ArbGasInfo: 0x000000000000000000000000000000000000006c
+✅ Hardhat Arbitrum Patch initialized
+```
+
+### 3. Precompile Validation Output
+
+```
+🔍 Validating Arbitrum Precompiles in Hardhat Context...
+
+✅ Arbitrum patch found in HRE
+📋 Found 2 precompile handlers:
+   ArbSys: 0x0000000000000000000000000000000000000064
+   ArbGasInfo: 0x000000000000000000000000000000000000006c
+
+🔧 Testing ArbSys arbChainID...
+✅ ArbSys arbChainID returned: 42161
+
+⛽ Testing ArbGasInfo getL1BaseFeeEstimate...
+✅ ArbGasInfo getL1BaseFeeEstimate returned: 20000000000 wei (20 gwei)
+
+📄 Testing contract deployment and precompile calls...
+✅ ArbProbes contract deployed at: 0x5FbDB2315678afecb367f032d93F642f64180aa3
+⚠️  Contract ArbSys call failed (expected for unpatched nodes): call revert exception
+⚠️  Contract ArbGasInfo call failed (expected for unpatched nodes): call revert exception
+
+🎉 Precompile validation completed!
+```
+
+### 4. Rust Test Output
+
+```
+running 15 tests
+test arb_sys::tests::test_arb_chain_id ... ok
+test arb_sys::tests::test_arb_block_number ... ok
+test arb_sys::tests::test_arb_os_version ... ok
+test arb_sys::tests::test_send_tx_to_l1 ... ok
+test arb_sys::tests::test_map_l1_sender_contract_address_to_l2_alias ... ok
+test arb_gas_info::tests::test_get_prices_in_wei ... ok
+test arb_gas_info::tests::test_get_l1_base_fee_estimate ... ok
+test arb_gas_info::tests::test_get_current_tx_l1_gas_fees ... ok
+test arb_gas_info::tests::test_get_prices_in_arb_gas ... ok
+test precompiles::tests::test_precompile_registry ... ok
+test precompiles::tests::test_arb_sys_precompile ... ok
+test precompiles::tests::test_arb_gas_info_precompile ... ok
+test tx7e::tests::test_tx7e_parser ... ok
+test tx7e::tests::test_tx7e_processor ... ok
+test integration::tests::test_end_to_end_flow ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
 ```
 
 ## Troubleshooting
 
 ### Common Issues
 
-#### 1. Rust Compilation Errors
+1. **Node.js Version Issues**
+   ```bash
+   # Use nvm to switch Node.js versions
+   nvm use 20
+   ```
 
-**Problem**: `cargo build` fails
-**Solution**:
+2. **Rust Compilation Errors**
+   ```bash
+   # Update Rust toolchain
+   rustup update
+   cargo clean
+   cargo build
+   ```
 
-```bash
-# Update Rust toolchain
-rustup update
-# Clean and rebuild
-cargo clean && cargo build
-```
+3. **Hardhat Plugin Not Loading**
+   ```bash
+   # Check plugin import in hardhat.config.ts
+   import "../../src/hardhat-patch";
+   ```
 
-#### 2. TypeScript Module Resolution
-
-**Problem**: `Cannot find module` errors
-**Solution**:
-
-```bash
-# Reinstall dependencies
-rm -rf node_modules package-lock.json
-npm install
-# Rebuild TypeScript
-npm run build
-```
-
-#### 3. Hardhat Context Errors
-
-**Problem**: `HardhatError: HH5: HardhatContext is not created`
-**Solution**: Ensure tests run within Hardhat environment or use standalone validation scripts.
-
-#### 4. Precompile Address Conflicts
-
-**Problem**: Handler already registered errors
-**Solution**: Check for duplicate registrations in test setup.
+4. **Test Timeouts**
+   ```bash
+   # Increase timeout for slow tests
+   npm test -- --timeout 30000
+   ```
 
 ### Debug Mode
 
-Enable verbose logging:
+Enable debug logging for detailed output:
 
 ```bash
-# Rust
-RUST_LOG=debug cargo test
-
-# TypeScript
-DEBUG=* npm test
+export DEBUG=true
+npm test
 ```
 
 ## Performance Benchmarks
 
-### Expected Performance Metrics
+### Test Execution Times
+- **Unit Tests**: ~3 seconds (82 tests)
+- **Integration Tests**: ~5 seconds
+- **Stress Tests**: ~10 seconds
+- **Rust Tests**: ~2 seconds (15 tests)
+- **Hardhat Tests**: ~5 seconds
 
-| Test Category        | Transactions/sec | Memory Usage | CPU Usage |
-| -------------------- | ---------------- | ------------ | --------- |
-| ArbSys Calls         | 10,000+          | < 50MB       | < 5%      |
-| ArbGasInfo Calls     | 8,000+           | < 50MB       | < 5%      |
-| 0x7e Processing      | 5,000+           | < 100MB      | < 10%     |
-| Stress Test (500 tx) | 100+             | < 200MB      | < 15%     |
+### Memory Usage
+- **Node.js Process**: ~100MB
+- **Rust Process**: ~50MB
+- **Total Test Suite**: ~150MB
 
-### Optimization Tips
+## CI/CD Integration
 
-1. **Use Connection Pooling**: Reuse provider connections
-2. **Batch Operations**: Group multiple calls when possible
-3. **Memory Management**: Clear unused handlers and caches
-4. **Async Processing**: Use non-blocking operations
+The project includes GitHub Actions workflows that run:
+- Multi-version Node.js testing (18.x, 20.x)
+- Rust compilation and testing
+- TypeScript compilation and testing
+- Integration and stress testing
+- Artifact upload for logs and build outputs
 
-## API Reference
+## Next Steps
 
-### Core Classes
-
-#### HardhatArbitrumPatch
-
-```typescript
-class HardhatArbitrumPatch {
-  constructor(config?: ArbitrumConfig);
-  getRegistry(): HardhatPrecompileRegistry;
-  getConfig(): ArbitrumConfig;
-  hasHandler(address: string): boolean;
-  listHandlers(): PrecompileHandler[];
-}
-```
-
-#### Tx7eParser
-
-```typescript
-class Tx7eParser {
-  readonly DEPOSIT_TX_TYPE: number;
-  parseTransaction(rawTx: Buffer): ParsedTransaction;
-  validateTransaction(tx: DepositTransaction): ValidationResult;
-  createMockDepositTransaction(
-    overrides?: Partial<DepositTransaction>
-  ): DepositTransaction;
-}
-```
-
-### Precompile Addresses
-
-| Precompile | Address | Functions                                            |
-| ---------- | ------- | ---------------------------------------------------- |
-| ArbSys     | 0x64    | `arbChainID()`, `arbBlockNumber()`, `arbOSVersion()` |
-| ArbGasInfo | 0x6C    | `getL1BaseFeeEstimate()`, `getCurrentTxL1GasFees()`  |
-
-### Function Selectors
-
-| Function                  | Selector     | Description                             |
-| ------------------------- | ------------ | --------------------------------------- |
-| `arbChainID()`            | `0xa3b1b31d` | Returns Arbitrum chain ID               |
-| `arbBlockNumber()`        | `0x051038f2` | Returns current block number            |
-| `arbOSVersion()`          | `0x4d2301cc` | Returns ArbOS version                   |
-| `getL1BaseFeeEstimate()`  | `0x4d2301cc` | Returns L1 base fee estimate            |
-| `getCurrentTxL1GasFees()` | `0x4d2301cc` | Returns current transaction L1 gas fees |
-
-## Contributing
-
-### Development Setup
-
-1. Fork the repository
-2. Create a feature branch
-3. Make changes with tests
-4. Run full test suite
-5. Submit pull request
-
-### Code Style
-
-- **Rust**: Follow rustfmt and clippy guidelines
-- **TypeScript**: Use ESLint and Prettier
-- **Tests**: Maintain >90% coverage
-
-### Testing Guidelines
-
-1. Write unit tests for new functionality
-2. Add integration tests for complex flows
-3. Include stress tests for performance-critical code
-4. Update documentation for API changes
+After completing Milestone 2:
+1. **Milestone 3**: Full EVM integration
+2. **Performance Optimization**: Gas cost optimization
+3. **Production Deployment**: Mainnet integration
+4. **Documentation**: API documentation and examples
 
 ## Support
 
-### Getting Help
-
-- **Issues**: Create GitHub issues for bugs
-- **Discussions**: Use GitHub Discussions for questions
-- **Documentation**: Check this guide and inline comments
-
-### Reporting Bugs
-
-Include:
-
-- Environment details (OS, Rust/Node versions)
-- Error messages and stack traces
-- Steps to reproduce
-- Expected vs actual behavior
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+For issues or questions:
+1. Check the troubleshooting section above
+2. Review test logs in `tests/logs/`
+3. Enable debug mode for detailed output
+4. Check CI/CD artifacts for automated test results
