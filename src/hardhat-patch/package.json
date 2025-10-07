@@ -4,9 +4,9 @@
   "description": "Hardhat plugin for Arbitrum precompile support",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": ["dist", "src/shims/*.json"],
+  "files": ["dist", "src/shims/*.json", "dist/**"],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && mkdir -p dist/shims && (cp -R src/hardhat-patch/shims/*.json dist/shims/ 2>/dev/null || true)",
     "test": "mocha --require ts-node/register 'tests/**/*.test.ts'",
     "lint": "eslint src/**/*.ts",
     "prepare": "npm run build",

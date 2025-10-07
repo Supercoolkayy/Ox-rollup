@@ -13,6 +13,7 @@ import path from "path";
 import { extendEnvironment } from "hardhat/config";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
 import { HardhatArbitrumPatch, ArbitrumConfig } from "./arbitrum-patch";
+import "./tasks";
 
 import {
   installNativePrecompiles,
