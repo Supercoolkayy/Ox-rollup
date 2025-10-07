@@ -18,6 +18,10 @@ This document describes installation and configuration for the **Stylus-first** 
     shims/
       ArbSysShim.json
       ArbGasInfoShim.json
+    tasks/
+      arb-install-shims.ts
+      arb-reseed-shims.ts
+      arb-gas-info.ts
 
   probes/hardhat/
     hardhat.config.js
@@ -25,8 +29,6 @@ This document describes installation and configuration for the **Stylus-first** 
     contracts/
       ArbSysShim.sol
       ArbGasInfoShim.sol
-    tasks/
-      arb-reseed-shims.js              (task name: arb:reseed-shims)
     scripts/
       predeploy-precompiles.js         (preinstall bytecode at 0x…64/0x…6c)
       install-and-check-shims.js       (one-shot install + verify)
@@ -42,7 +44,7 @@ This document describes installation and configuration for the **Stylus-first** 
 
 ```js
 require("@nomicfoundation/hardhat-ethers");
-require("@arbitrum/hardhat-patch");     // plugin entry
+require("@arbitrum/hardhat-patch");     // plugin entry; auto-loads tasks
 
 module.exports = {
   solidity: "0.8.19",
@@ -53,15 +55,15 @@ module.exports = {
   },
   arbitrum: {
     enabled: true,
-    runtime: "stylus",                  // stylus-first
-    precompiles: { mode: "auto" },      // tries native in future; shims today
+    runtime: "stylus",                  // Stylus-first
+    precompiles: { mode: "auto" },      // tries native later; shims today
     // stylusRpc: "https://sepolia-rollup.arbitrum.io/rpc", // optional default
   },
 };
 ```
 
-* `runtime: "stylus"` marks Stylus as the default runtime flavor.
-* `precompiles.mode: "auto"` enables lazy shim installation and reseeding logic in this milestone (native hooks can be introduced in a later phase).
+* `runtime: "stylus"` sets Stylus as the default runtime flavor.
+* `precompiles.mode: "auto"` enables lazy shim installation in this milestone (native hooks can be introduced in a later phase).
 
 ### 2.2 `precompiles.config.json` (optional)
 
@@ -76,21 +78,23 @@ module.exports = {
 }
 ```
 
-* `gas.pricesInWei` must be a **6-tuple in shim order**:
+* `gas.pricesInWei` is a **6-tuple in shim order**:
 
   ```
   [ l2BaseFee, l1BaseFeeEstimate, l1CalldataCost, l1StorageCost, congestionFee, aux ]
   ```
-* If both `stylusRpc` and `gas.pricesInWei` are provided, the reseed task prioritizes RPC first (see §3.4).
 
-### 2.3 Environment variables (optional but recommended)
+* When both `stylusRpc` and `gas.pricesInWei` are present, reseeding prioritizes RPC (§3.4).
 
-* `STYLUS_RPC` — RPC endpoint for Stylus (e.g., `https://sepolia-rollup.arbitrum.io/rpc`).
+### 2.3 Environment variables (optional)
+
+* `STYLUS_RPC` — RPC endpoint for Stylus (for example, `https://sepolia-rollup.arbitrum.io/rpc`).
 * `ARB_PRECOMPILES_CONFIG` — path override to a non-default `precompiles.config.json`.
-* **Stability toggles (helpful on WSL/docker):**
 
-  * `NODE_OPTIONS=--dns-result-order=ipv4first`
-  * `NODE_NO_HTTP2=1`
+**Stability toggles** (often helpful on WSL/docker):
+
+* `NODE_OPTIONS=--dns-result-order=ipv4first`
+* `NODE_NO_HTTP2=1`
 
 Example:
 
@@ -104,9 +108,9 @@ export STYLUS_RPC=https://sepolia-rollup.arbitrum.io/rpc
 
 ## 3) Shim installation & reseeding
 
-Two flows are supported: **ephemeral** (in-process Hardhat VM) and **persistent** (a running Hardhat node on a port, e.g., 8549). Both end up with shims at the canonical addresses:
+Two flows are supported: **ephemeral** (in-process Hardhat VM) and **persistent** (a running Hardhat node on a port, e.g., 8549). Both install shims at the canonical addresses:
 
-* **ArbSys**   — `0x0000000000000000000000000000000000000064`
+* **ArbSys**     — `0x0000000000000000000000000000000000000064`
 * **ArbGasInfo** — `0x000000000000000000000000000000000000006c`
 
 ### 3.1 Ephemeral Hardhat (fastest loop)
@@ -114,34 +118,42 @@ Two flows are supported: **ephemeral** (in-process Hardhat VM) and **persistent*
 This mode spins up a fresh in-process Hardhat network per command.
 
 ```bash
-# Install + verify shims in a single run (one-shot script)
+# One-shot install + verify
 npx hardhat --config hardhat.config.js run scripts/install-and-check-shims.js
 ```
 
-Expected output (example):
+Expected example:
 
 ```
 getPricesInWei(): [ '69440', '496', '2000000000000', '100000000', '0', '100000000' ]
 ✅ shims installed, seeded, and verified in one run.
 ```
 
+Tasks auto-loaded by the plugin can also be used:
+
+```bash
+npx hardhat --config hardhat.config.js arb:install-shims
+```
+
 ### 3.2 Persistent Hardhat node (HTTP)
 
-Run a node and point “localhost” at it:
+Start a node and point “localhost” at it:
 
 ```bash
 # Start persistent node on 8549
 npx hardhat node --port 8549
-# …leave running in this terminal
+# …leave running
+```
 
-# In another terminal:
-# Optional: set environment stability toggles and Stylus RPC
+Optional environment setup:
+
+```bash
 export NODE_OPTIONS=--dns-result-order=ipv4first
 export NODE_NO_HTTP2=1
 export STYLUS_RPC=https://sepolia-rollup.arbitrum.io/rpc
 ```
 
-Add (or ensure) in `hardhat.config.js`:
+Network entry for the persistent node:
 
 ```js
 networks: {
@@ -149,7 +161,7 @@ networks: {
 }
 ```
 
-Predeploy shim bytecode to the node:
+Predeploy shim bytecode:
 
 ```bash
 npx hardhat --config hardhat.config.js run --network localhost scripts/predeploy-precompiles.js
@@ -167,37 +179,37 @@ npx hardhat --config hardhat.config.js arb:reseed-shims --network localhost --st
 
 Examples:
 
-* Success:
+**Success**
 
-  ```
-  ℹ️ fetched from Stylus: [
-    '26440960','188864','2000000000000','100000000','0','100000000'
-  ]
-  ✅ Re-seeded getPricesInWei -> [
-    '26440960','188864','2000000000000','100000000','0','100000000'
-  ]
-  ```
+```
+ℹ️ fetched from Stylus: [
+  '26440960','188864','2000000000000','100000000','0','100000000'
+]
+✅ Re-seeded getPricesInWei -> [
+  '26440960','188864','2000000000000','100000000','0','100000000'
+]
+```
 
-* Temporary failure (falls back to config/default):
+**Temporary failure (fallback)**
 
-  ```
-  ⚠️  RPC fetch failed (https://sepolia-rollup.arbitrum.io/rpc): fetch failed
-  ℹ️ Stylus/Nitro RPC unavailable; will try other sources.
-  ℹ️ using JSON/config (shim order): [ '69440','496','2000000000000','100000000','0','100000000' ]
-  ✅ Re-seeded getPricesInWei -> [ '69440','496','2000000000000','100000000','0','100000000' ]
-  ```
+```
+⚠️  RPC fetch failed (https://sepolia-rollup.arbitrum.io/rpc): fetch failed
+ℹ️ Stylus/Nitro RPC unavailable; will try other sources.
+ℹ️ using JSON/config (shim order): [ '69440','496','2000000000000','100000000','0','100000000' ]
+✅ Re-seeded getPricesInWei -> [ '69440','496','2000000000000','100000000','0','100000000' ]
+```
 
 ### 3.4 Source priority (reseeding)
 
-1. **Stylus RPC** (flag `--stylus` or `stylusRpc`/`STYLUS_RPC` available)
+1. **Stylus RPC** (flag `--stylus`, or `stylusRpc`/`STYLUS_RPC`)
 2. **`precompiles.config.json`** (`gas.pricesInWei` in shim order)
 3. **Built-in fallback** (safe defaults)
 
-Flags supported by the reseed task:
+Supported flags:
 
-* `--stylus` — force Stylus RPC
-* `--nitro`  — force Nitro RPC (optional, for parity testing)
-* No flag   — follow config and environment; otherwise fall back to config/defaults
+* `--stylus` — prioritize Stylus RPC
+* `--nitro`  — prioritize Nitro RPC (optional, for parity checks)
+* No flag    — follow config/env; otherwise fall back to config/defaults
 
 ---
 
@@ -241,30 +253,30 @@ Contract ArbGasInfo call returned: 496
  Precompile validation completed!
 ```
 
-Notes:
-
-* In shim mode, `getCurrentTxL1GasFees()` returns the **estimate** (slot 1) to provide deterministic test results.
+Note: in shim mode, `getCurrentTxL1GasFees()` returns the **estimate** (slot 1) for deterministic test results.
 
 ---
 
 ## 5) Operational notes
 
-* **Address immutability:** shims are placed at canonical precompile addresses to match Arbitrum expectations; normal deployments cannot override them in a live chain—this is a local testing convenience.
-* **Determinism vs. realism:** shim return values can be fixed via config or sampled via RPC. For reproducible unit tests, the config tuple is recommended.
-* **RPC networking:** `ipv4first` and `NODE_NO_HTTP2=1` often resolve transient TLS/HTTP2 issues on WSL/docker when calling public RPCs.
+* **Address immutability:** shims are placed at canonical precompile addresses; this mirrors Arbitrum expectations in local testing.
+* **Determinism vs. realism:** shim values can be fixed via config or sampled via RPC. For reproducible tests, the config tuple is recommended.
+* **RPC networking:** `ipv4first` and `NODE_NO_HTTP2=1` often resolve transient TLS/HTTP2 issues on WSL/docker.
 * **ChainId:** `ArbSysShim` returns `arbSysChainId` (from config) at slot 0; default resolves to 42161.
 
 ---
 
 ## 6) Quick reference (common commands)
 
-Ephemeral, one-shot:
+**Ephemeral, one-shot**
 
 ```bash
 npx hardhat --config hardhat.config.js run scripts/install-and-check-shims.js
+# or
+npx hardhat --config hardhat.config.js arb:install-shims
 ```
 
-Persistent node (8549):
+**Persistent node (8549)**
 
 ```bash
 # Terminal A
@@ -277,5 +289,3 @@ npx hardhat --config hardhat.config.js arb:reseed-shims --network localhost --st
 npx hardhat --config hardhat.config.js run --network localhost scripts/check-gasinfo-local.js
 npx hardhat --config hardhat.config.js run --network localhost scripts/validate-precompiles.js
 ```
-
-This completes setup and configuration for the Stylus-first shim workflow used in Milestone 3.

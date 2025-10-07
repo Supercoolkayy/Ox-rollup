@@ -1,14 +1,14 @@
 # Milestone 3 — Reseeding & Validation
 
-This document covers reseeding the **ArbGasInfo shim** with fee data and validating **ArbSys / ArbGasInfo** behavior in a Stylus-first workflow. Scope is limited to the shim path (no VM precompile injection).
+This document covers reseeding the **ArbGasInfo** shim with fee data and validating **ArbSys / ArbGasInfo** behavior in a Stylus-first workflow. Scope is limited to the shim path (no VM precompile injection).
 
 ---
 
 ## 1) Purpose
 
-* Keep local tests aligned with a real Stylus network by periodically **reseeding** `ArbGasInfoShim` at `0x…6c` with a 6-value tuple from a live RPC.
-* Support deterministic runs by falling back to **project configuration** (`precompiles.config.json`) or a **safe default**.
-* Validate behavior end-to-end using raw precompile selectors and a small probe contract.
+* Keep local tests aligned with a live Stylus network by periodically reseeding `ArbGasInfoShim` at `0x…6c` with a 6-value tuple from RPC.
+* Preserve determinism when RPC is unavailable by falling back to project configuration (`precompiles.config.json`) or to a safe default.
+* Validate end-to-end behavior using raw precompile selectors and a minimal probe contract.
 
 ---
 
@@ -16,20 +16,19 @@ This document covers reseeding the **ArbGasInfo shim** with fee data and validat
 
 ### 2.1 Canonical addresses
 
-* `ArbSys`     `0x0000000000000000000000000000000000000064`
-* `ArbGasInfo` `0x000000000000000000000000000000000000006c`
+* **ArbSys**      `0x0000000000000000000000000000000000000064`
+* **ArbGasInfo**  `0x000000000000000000000000000000000000006c`
 
 ### 2.2 Shim tuple (storage order)
 
-`ArbGasInfoShim.getPricesInWei()` returns a **6-tuple** in this **shim order**:
+`ArbGasInfoShim.getPricesInWei()` returns a 6-tuple in **shim order**:
 
 ```
 [ l2BaseFee, l1BaseFeeEstimate, l1CalldataCost, l1StorageCost, congestionFee, aux ]
 ```
 
-* `aux` is a free slot (often used to surface a blob/aux fee placeholder for debugging).
-
-> Note: The reseed task automatically converts tuples fetched from networks where ordering differs.
+* `aux` is a general-purpose slot (commonly used to surface auxiliary fees such as blob base fee during experiments).
+* Tuples fetched from networks with different ordering are normalized by the reseed task before storage.
 
 ---
 
@@ -37,22 +36,22 @@ This document covers reseeding the **ArbGasInfo shim** with fee data and validat
 
 Reseeding uses the following priority:
 
-1. **Stylus RPC** — when `--stylus` is passed, or `stylusRpc`/`STYLUS_RPC` is present.
-2. **Nitro RPC** — when `--nitro` is passed, or `nitroRpc`/`NITRO_RPC` is present.
-3. **Project config** — `precompiles.config.json` → `gas.pricesInWei` (must already be in **shim order**).
-4. **Built-in fallback** — a safe constant tuple.
+1. **Stylus RPC** — selected via `--stylus`, or when `stylusRpc`/`STYLUS_RPC` is present.
+2. **Nitro RPC** — selected via `--nitro`, or when `nitroRpc`/`NITRO_RPC` is present (optional parity path).
+3. **Project config** — `precompiles.config.json` → `gas.pricesInWei` (already in shim order).
+4. **Built-in fallback** — safe constant tuple for deterministic testing.
 
-### 3.1 Environment & config keys
+### 3.1 Configuration keys & env
 
-* Environment:
+* **Environment**
 
-  * `STYLUS_RPC` (preferred)
-  * `NITRO_RPC`  (optional compatibility)
-  * `ARB_PRECOMPILES_CONFIG` (path override)
-* Project config (`precompiles.config.json`):
+  * `STYLUS_RPC` (preferred public endpoint for Stylus)
+  * `NITRO_RPC` (optional)
+  * `ARB_PRECOMPILES_CONFIG` (path override for the JSON file)
+* **Project config** (`precompiles.config.json`)
 
   * `stylusRpc`, `nitroRpc`
-  * `gas.pricesInWei` (array of 6 decimal strings, **shim order**)
+  * `gas.pricesInWei` — array of 6 decimal strings in **shim order**
 
 ---
 
@@ -60,11 +59,11 @@ Reseeding uses the following priority:
 
 ### 4.1 Behavior
 
-* Verifies the shim is installed at `0x…6c`.
-* Selects a source by priority (flags/env/config).
-* Normalizes remote tuples to **shim order**.
+* Confirms the shim is installed at `0x…6c`.
+* Selects a source using the priority rules above (flags/env/config).
+* Normalizes remote tuples to **shim order** when required.
 * Calls `ArbGasInfoShim.__seed(uint256[6])`.
-* Prints the effective tuple chosen and confirms the readback.
+* Prints the source used and a readback value for verification.
 
 ### 4.2 Flags
 
@@ -73,7 +72,7 @@ Reseeding uses the following priority:
 
 ### 4.3 Examples
 
-**Reseed from Stylus Sepolia (public RPC):**
+**Reseed from Stylus Sepolia (public RPC)**
 
 ```bash
 export NODE_OPTIONS=--dns-result-order=ipv4first
@@ -95,7 +94,7 @@ Possible output:
 ]
 ```
 
-**Fallback to config (no RPC):**
+**Fallback to config (no RPC reachable)**
 
 ```bash
 npx hardhat --config hardhat.config.js arb:reseed-shims --network localhost
@@ -108,7 +107,7 @@ Output:
 ✅ Re-seeded getPricesInWei -> [ '69440','496','2000000000000','100000000','0','100000000' ]
 ```
 
-**Nitro compatibility (optional):**
+**Nitro compatibility (optional)**
 
 ```bash
 export NITRO_RPC=http://127.0.0.1:8547
@@ -129,7 +128,7 @@ Checks the tuple stored in the shim:
 npx hardhat --config hardhat.config.js run --network localhost scripts/check-gasinfo-local.js
 ```
 
-Expected:
+Expected example:
 
 ```
 [ '69440', '496', '2000000000000', '100000000', '0', '100000000' ]
@@ -167,22 +166,39 @@ Contract ArbGasInfo call returned: 496
  Precompile validation completed!
 ```
 
-Notes:
-
-* In shim mode, `getCurrentTxL1GasFees()` is bound to the estimate (slot 1) for determinism.
+Note: in shim mode, `getCurrentTxL1GasFees()` is bound to the estimate (slot 1) for deterministic results.
 
 ---
 
-## 6) End-to-end local flows
+## 6) Comparative inspection (optional)
 
-### 6.1 Ephemeral (single-shot)
+A helper task provides a quick comparison between the local tuple and a remote RPC:
+
+```bash
+# Compare local vs Stylus remote (prints per-index equality)
+npx hardhat --config hardhat.config.js arb:gas-info --stylus
+
+# Compare local vs explicit RPC
+npx hardhat --config hardhat.config.js arb:gas-info --rpc https://sepolia-rollup.arbitrum.io/rpc
+
+# Machine-readable output
+npx hardhat --config hardhat.config.js arb:gas-info --stylus --json
+```
+
+Output includes `local`, `remote`, and an index-by-index diff with equality markers.
+
+---
+
+## 7) End-to-end local flows
+
+### 7.1 Ephemeral (single-shot)
 
 ```bash
 # One-shot install + verify in a fresh in-process VM
 npx hardhat --config hardhat.config.js run scripts/install-and-check-shims.js
 ```
 
-### 6.2 Persistent node (recommended for iterative testing)
+### 7.2 Persistent node (recommended for iterative testing)
 
 ```bash
 # Terminal A
@@ -202,26 +218,27 @@ npx hardhat --config hardhat.config.js arb:reseed-shims --network localhost --st
 # Validate
 npx hardhat --config hardhat.config.js run --network localhost scripts/check-gasinfo-local.js
 npx hardhat --config hardhat.config.js run --network localhost scripts/validate-precompiles.js
+
+# (Optional) Inspect diff vs remote
+npx hardhat --config hardhat.config.js arb:gas-info --stylus
 ```
 
 ---
 
-## 7) Troubleshooting
+## 8) Troubleshooting (quick picks)
 
-### 7.1 HH108: cannot connect to `localhost`
+* **HH108: cannot connect to `localhost`**
+  Ensure a Hardhat node is running on the configured port (e.g., `npx hardhat node --port 8549`) and that `networks.localhost.url` matches.
 
-* Ensure a Hardhat node is running on the configured port.
-* Example: `npx hardhat node --port 8549` and set `localhost: { url: "http://127.0.0.1:8549" }`.
-
-### 7.2 Public RPC fetch failures
-
-* Set:
+* **Public RPC fetch failures**
+  Set:
 
   ```bash
   export NODE_OPTIONS=--dns-result-order=ipv4first
   export NODE_NO_HTTP2=1
   ```
-* Confirm remote reachability:
+
+  Sanity-check with:
 
   ```bash
   curl -s https://sepolia-rollup.arbitrum.io/rpc \
@@ -229,9 +246,8 @@ npx hardhat --config hardhat.config.js run --network localhost scripts/validate-
     --data '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}'
   ```
 
-### 7.3 Shims not present
-
-* Run the predeploy script (or the one-shot installer):
+* **Shims not present**
+  Run the predeploy or the one-shot installer:
 
   ```bash
   npx hardhat --config hardhat.config.js run --network localhost scripts/predeploy-precompiles.js
@@ -239,18 +255,19 @@ npx hardhat --config hardhat.config.js run --network localhost scripts/validate-
   npx hardhat --config hardhat.config.js run scripts/install-and-check-shims.js
   ```
 
-### 7.4 Tuple order confusion
-
-* `precompiles.config.json` **must** use **shim order**.
-* Remote tuples with a different order are normalized by the task before calling `__seed`.
+* **Tuple order confusion**
+  `precompiles.config.json` must use **shim order**. Remote tuples with different order are normalized by the task prior to `__seed`.
 
 ---
 
-## 8) Expected artifacts & scripts
+## 9) Artifacts & scripts (expected)
 
 * **Tasks**
 
-  * `tasks/arb-reseed-shims.js` → implements `arb:reseed-shims`
+  * `tasks/arb-reseed-shims.ts` → implements `arb:reseed-shims`
+  * `tasks/arb-gas-info.ts`     → implements `arb:gas-info`
+  * `tasks/arb-install-shims.ts`→ implements `arb:install-shims`
+
 * **Scripts**
 
   * `scripts/predeploy-precompiles.js` → writes shim bytecode at `0x…64`/`0x…6c`
@@ -258,4 +275,3 @@ npx hardhat --config hardhat.config.js run --network localhost scripts/validate-
   * `scripts/check-gasinfo-local.js` → prints the tuple
   * `scripts/validate-precompiles.js` → raw selector + contract probe
 
-This completes reseeding and validation for Milestone 3’s Stylus-first shim flow.
