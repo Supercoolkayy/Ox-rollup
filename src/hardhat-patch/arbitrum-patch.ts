@@ -39,6 +39,13 @@ export interface ArbitrumConfig {
   stylusRpc?: string;                     // used when runtime=stylus (native/auto)
   nitroRpc?: string;                      // optional (compatibility)
 
+    // costing block (off by default; shim path keeps behavior unchanged)
+  costing?: {
+    enabled?: boolean;
+    emulateNitro?: boolean; // reserved for native mode later
+  };
+
+
   // Optional local seeding override (used by plugin in shim mode)
   gas?: { pricesInWei?: (string | number | bigint)[] };
   arbSysChainId?: any;                 // override for ArbSys shim
@@ -71,6 +78,11 @@ export class HardhatArbitrumPatch {
       precompiles: { mode: config.precompiles?.mode ?? "auto" },
       stylusRpc: config.stylusRpc ?? "",
       nitroRpc: config.nitroRpc ?? "",
+
+      costing: {
+        enabled: config.costing?.enabled ?? false,
+        emulateNitro: config.costing?.emulateNitro ?? false,
+      },
 
       gas: {
         pricesInWei: config.gas?.pricesInWei ?? undefined,
@@ -147,6 +159,10 @@ export class HardhatArbitrumPatch {
         ...this.config.precompiles,
         ...(newConfig.precompiles ?? {}),
       },
+      costing: { 
+        ...this.config.costing, 
+        ...(newConfig.costing ?? {}) 
+      }, 
       gas: {
         ...this.config.gas,
         ...(newConfig.gas ?? {}),

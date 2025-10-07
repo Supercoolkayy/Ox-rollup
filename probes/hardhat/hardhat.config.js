@@ -1,10 +1,10 @@
 require("@nomicfoundation/hardhat-ethers");
 require("@arbitrum/hardhat-patch");
-require("./tasks/arb-reseed-shims"); 
 
 module.exports = {
   solidity: "0.8.19",
-  networks: { hardhat: { chainId: 42161 } },
+  networks: { 
+    hardhat: { chainId: 42161 }, localhost: { url: "http://127.0.0.1:8549" } },
   arbitrum: {
     enabled: true,
     chainId: 42161,
@@ -14,5 +14,10 @@ module.exports = {
     // gas: { pricesInWei: ["69440","496","2000000000000","100000000","0","100000000"] },
     // arbSysChainId: 42161,
     // nitroRpc: "http://127.0.0.1:8547",   // only  in native mode
+    costing: {
+    enabled: false,
+    emulateNitro: false,
+  },
+ 
   },
 };

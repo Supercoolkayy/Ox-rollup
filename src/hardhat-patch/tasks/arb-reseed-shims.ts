@@ -20,23 +20,11 @@ function loadJsonConfig(hre: HardhatRuntimeEnvironment): any {
 }
 
 // Nitro → Shim reorder (Nitro tuple observed: [baseFee,l1Base,l1Calldata,l2Base,congestion,blobBase])
-function nitroToShimTuple(n: Six): Six {
-  const baseFee           = n[0];
-  const l1BaseFeeEstimate = n[1];
-  const l1CalldataCost    = n[2];
-  const l2BaseFee         = n[3];
-  const congestionFee     = n[4];
-  const blobBaseFee       = n[5];
-  const l1StorageCost     = "0"; // no explicit Nitro source
-
-  return [
-    l2BaseFee,
-    l1BaseFeeEstimate,
-    l1CalldataCost,
-    l1StorageCost,
-    congestionFee,
-    blobBaseFee,
-  ];
+function nitroToShimTuple(n: string[]) {
+  if (!Array.isArray(n) || n.length !== 6) throw new Error("bad nitro tuple");
+  const l1StorageCost = "0";
+  const [baseFee, l1BaseFeeEstimate, l1CalldataCost, l2BaseFee, congestionFee, blobBaseFee] = n.map(String);
+  return [l2BaseFee, l1BaseFeeEstimate, l1CalldataCost, l1StorageCost, congestionFee, blobBaseFee];
 }
 
 async function rpcCall(rpcUrl: string, method: string, params: any[]): Promise<any> {
@@ -56,6 +44,25 @@ function makeIface(hre: HardhatRuntimeEnvironment) {
     "function getPricesInWei() view returns (uint256,uint256,uint256,uint256,uint256,uint256)",
   ]);
 }
+
+// --- File cache helpers ---
+function tryReadCache(cachePath: string, ttlMs: number): string[] | null {
+  try {
+    const st = fs.statSync(cachePath);
+    if (Date.now() - st.mtimeMs > ttlMs) return null;
+    const j = JSON.parse(fs.readFileSync(cachePath, "utf8"));
+    if (Array.isArray(j) && j.length === 6) return j.map(String);
+  } catch {}
+  return null;
+}
+function writeCache(cachePath: string, tuple: string[]) {
+  try {
+    fs.mkdirSync(path.dirname(cachePath), { recursive: true });
+    fs.writeFileSync(cachePath, JSON.stringify(tuple), "utf8");
+  } catch {}
+}
+
+
 async function fetchPricesTuple(rpcUrl: string, hre: HardhatRuntimeEnvironment): Promise<Six | null> {
   try {
     const iface = makeIface(hre);
@@ -69,98 +76,78 @@ async function fetchPricesTuple(rpcUrl: string, hre: HardhatRuntimeEnvironment):
   }
 }
 
+
+
+
 task("arb:reseed-shims", "Seed ArbGasInfoShim from Stylus/Nitro RPC or JSON")
-  .addFlag("stylus", "Fetch from Stylus RPC (alias: --fromStylus)")
-  .addFlag("fromStylus", "Alias for --stylus")
-  .addFlag("nitro", "Fetch from Nitro RPC (alias: --fromNitro)")
-  .addFlag("fromNitro", "Alias for --nitro")
-  .addOptionalParam("rpc", "Explicit RPC URL override")
-  .setAction(async (flags, hre) => {
-    // ensure shim code exists
+  .addFlag("stylus", "Fetch from Stylus RPC")
+  .addFlag("nitro", "Fetch from Nitro RPC")
+  .addOptionalParam("cacheTtl", "File cache TTL (seconds, Stylus only)", "0")
+  .addOptionalParam("cachePath", "Cache file path (Stylus only)", ".cache/stylus-prices.json")
+  .setAction(async (flags: any, hre: HardhatRuntimeEnvironment) => {
     const code = await hre.network.provider.send("eth_getCode", [ADDR_GASINFO, "latest"]);
     if (code === "0x") {
-      console.log("❌ ArbGasInfoShim not installed at 0x...6c. Run arb:install-shims or your predeploy first.");
+      console.log("❌ ArbGasInfoShim not installed at 0x…6c. Install shims first.");
       return;
     }
 
-    const project = loadJsonConfig(hre);
-    const userCfg = (hre.config as any).arbitrum ?? {};
-    const runtime = (userCfg.runtime ?? project.runtime ?? "stylus") as "stylus" | "nitro";
+    const cfg = { ...loadJsonConfig(hre), ...(hre.config as any).arbitrum };
+    const wantStylus = !!flags.stylus;
+    const wantNitro  = !!flags.nitro;
 
-    // Priority:
-    // 1) --rpc
-    // 2) --stylus / STYLUS_RPC / config.stylusRpc (default when runtime=stylus)
-    // 3) --nitro  / NITRO_RPC  / config.nitroRpc
-    // 4) precompiles.config.json gas.pricesInWei (already shim order)
-    // 5) safe fallback
-    let shimTuple: Six | null = null;
+    const stylusRpc = cfg.stylusRpc ?? process.env.STYLUS_RPC ?? null;
+    const nitroRpc  = cfg.nitroRpc  ?? process.env.NITRO_RPC  ?? null;
 
-    // 1) direct RPC
-    if (flags.rpc && typeof flags.rpc === "string") {
-      const t = await fetchPricesTuple(flags.rpc, hre);
-      if (t) {
-        console.log("ℹ️ fetched from --rpc:", t);
-        shimTuple = t; // already shim order (ArbGasInfo.getPricesInWei)
-      } else {
-        console.log("⚠️  RPC fetch failed (override).");
+    const cacheTtlMs = Math.max(0, Number(flags.cacheTtl) | 0) * 1000;
+    const cachePath  = String(flags.cachePath ?? ".cache/stylus-prices.json");
+
+    let shimTuple: string[] | null = null;
+
+    // Stylus path: optional cache → RPC
+    if (wantStylus && stylusRpc) {
+      if (cacheTtlMs > 0) {
+        const cached = tryReadCache(cachePath, cacheTtlMs);
+        if (cached) {
+          shimTuple = cached;
+          console.log("ℹ️ using Stylus file cache:", shimTuple);
+        }
       }
-    }
-
-    // 2) stylus
-    const wantStylus = !!(flags.stylus || flags.fromStylus || (!flags.nitro && runtime === "stylus"));
-    if (!shimTuple && wantStylus) {
-      const stylusRpc =
-        (userCfg.stylusRpc ?? project.stylusRpc ?? process.env.STYLUS_RPC) || null;
-      if (stylusRpc) {
-        const t = await fetchPricesTuple(stylusRpc, hre);
-        if (t) {
-          console.log("ℹ️ fetched from Stylus:", t);
-          shimTuple = t;
-        } else {
-          console.log("⚠️ Stylus RPC fetch failed.");
+      if (!shimTuple) {
+        try {
+          const t: any = await fetchPricesTuple(stylusRpc, hre);
+          shimTuple = t.map(String); // already shim order
+          console.log("ℹ️ fetched from Stylus:", shimTuple);
+          if (cacheTtlMs > 0) writeCache(cachePath, (shimTuple as any));
+        } catch (e: any) {
+          console.log(`⚠️ Stylus RPC fetch failed (${stylusRpc}): ${e?.message ?? e}`);
         }
       }
     }
 
-    // 3) nitro
-    const wantNitro = !!(flags.nitro || flags.fromNitro || (!flags.stylus && runtime === "nitro"));
-    if (!shimTuple && wantNitro) {
-      const nitroRpc =
-        (userCfg.nitroRpc ?? project.nitroRpc ?? process.env.NITRO_RPC) || null;
-      if (nitroRpc) {
-        const t = await fetchPricesTuple(nitroRpc, hre);
-        if (t) {
-          const s = nitroToShimTuple(t);
-          console.log("ℹ️ fetched from Nitro:", t, "→ shim:", s);
-          shimTuple = s;
-        } else {
-          console.log("⚠️ Nitro RPC fetch failed.");
-        }
+    // Nitro path (optional compatibility)
+    if (!shimTuple && wantNitro && nitroRpc) {
+      try {
+        const t: any = await fetchPricesTuple(nitroRpc, hre);
+        shimTuple = nitroToShimTuple(t);
+        console.log("ℹ️ fetched from Nitro:", t, "→ shim:", shimTuple);
+      } catch (e: any) {
+        console.log(`⚠️ Nitro RPC fetch failed (${nitroRpc}): ${e?.message ?? e}`);
       }
     }
 
-    // 4) JSON/config (already shim order)
+    // Project config
     if (!shimTuple) {
-      const arr =
-        (project?.gas?.pricesInWei as string[] | undefined) ??
-        (userCfg?.gas?.pricesInWei as string[] | undefined);
+      const arr = cfg?.gas?.pricesInWei;
       if (Array.isArray(arr) && arr.length === 6) {
-        shimTuple = arr.map(String) as Six;
+        shimTuple = arr.map(String);
         console.log("ℹ️ using JSON/config (shim order):", shimTuple);
       }
     }
 
-    // 5) fallback
+    // Fallback
     if (!shimTuple) {
-      shimTuple = [
-        "100000000",     // l2BaseFee (0.1 gwei)
-        "1000000000",    // l1BaseFeeEstimate (1 gwei)
-        "2000000000000", // l1CalldataCost
-        "0",             // l1StorageCost
-        "0",             // congestionFee
-        "100000000",     // aux (blobBaseFee placeholder)
-      ];
-      console.log("ℹ️ using fallback:", shimTuple);
+      shimTuple = ["100000000", "1000000000", "2000000000000", "0", "0", "100000000"];
+      console.log("ℹ️ using plugin fallback:", shimTuple);
     }
 
     // Seed via shim’s __seed()
@@ -172,7 +159,6 @@ task("arb:reseed-shims", "Seed ArbGasInfoShim from Stylus/Nitro RPC or JSON")
     const gas = new (hre as any).ethers.Contract(ADDR_GASINFO, gasAbi, signer);
     const tx = await gas.__seed(shimTuple);
     await tx.wait();
-
     const r = await gas.getPricesInWei();
-    console.log("✅ Re-seeded getPricesInWei ->", Array.from(r).map((x: any) => x.toString()));
+    console.log("✅ Re-seeded getPricesInWei ->", r.map((x: any) => x.toString()));
   });

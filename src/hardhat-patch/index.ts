@@ -15,9 +15,11 @@ import type { HardhatRuntimeEnvironment } from "hardhat/types";
 import { HardhatArbitrumPatch, ArbitrumConfig } from "./arbitrum-patch";
 import "./tasks";
 
+
 import {
   installNativePrecompiles,
   fetchStylusGasTuple,
+  fetchStylusGasTupleCached,
 } from "./native-precompiles";
 
 // Embedded shim bytecode (dist artifacts produced at build time)
@@ -74,6 +76,7 @@ extendEnvironment((hre: HardhatRuntimeEnvironment) => {
     l1BaseFee: BigInt("20000000000"),
     runtime: "stylus",
     precompiles: { mode: "auto" }, // try native, fall back to shim automatically
+    costing: { enabled: false, emulateNitro: false },
   };
 
   const fileCfg = loadJsonConfig(hre);
@@ -129,19 +132,14 @@ extendEnvironment((hre: HardhatRuntimeEnvironment) => {
       const stylusPrices = stylusRpc
         ? await fetchPricesFromStylusRpc(stylusRpc).catch(() => null)
         : null;
-
-      const prices =
-        (fileOrUserPrices as any) ??
-        stylusPrices ??
-        ([
-          "69440",
-          "496",
-          "2000000000000",
-          "100000000",
-          "0",
-          "100000000",
-        ] as const);
-
+      let prices: (string | number | bigint)[] | null = null;
+      if (stylusRpc) {
+      try {
+        prices = await fetchStylusGasTupleCached(hre, stylusRpc); // NEW cached call
+      } catch {}
+    }
+    if (!prices) prices = (config as any)?.gas?.pricesInWei ?? null;
+    if (!prices) prices = ["69440", "496", "2000000000000", "100000000", "0", "100000000"];
       const chainId =
         (config as any).arbSysChainId ?? (config as any).chainId ?? 42161;
 
@@ -226,3 +224,4 @@ export * from "./precompiles/arbGasInfo";
 export * from "./tx/tx7e-parser";
 export * from "./tx/tx7e-processor";
 export * from "./tx/tx7e-integration";
+

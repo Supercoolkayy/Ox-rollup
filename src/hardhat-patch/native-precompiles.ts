@@ -22,6 +22,33 @@ type PrecompileHandler = (opts: {
   gasLimit?: bigint;
 }) => Promise<{ success: boolean; return: Buffer; gasUsed?: bigint }>;
 
+
+
+
+
+function encodeABI(hre: HardhatRuntimeEnvironment) {
+  const iface = new (hre as any).ethers.Interface([
+    "function getPricesInWei() view returns (uint256,uint256,uint256,uint256,uint256,uint256)",
+  ]);
+  return {
+    iface,
+    data: iface.encodeFunctionData("getPricesInWei", []),
+  };
+}
+
+async function rpcCall(rpcUrl: string, method: string, params: any[]) {
+  const res = await fetch(rpcUrl, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
+  });
+  if (!res.ok) throw new Error(`RPC ${method} HTTP ${res.status}`);
+  const j: any = await res.json();
+  if (j?.error) throw new Error(`RPC ${method} error: ${j.error.message ?? "unknown"}`);
+  return j.result;
+}
+
+
 /* -------------------------------------------------------------------------- */
 /*                            Internal small helpers                           */
 /* -------------------------------------------------------------------------- */
@@ -143,46 +170,29 @@ export async function installNativePrecompiles(
 /*                  Public: fetch Stylus gas tuple (prices)                    */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Fetch the Stylus gas price tuple via ArbGasInfo.getPricesInWei() from a Stylus RPC.
- * Returns an array of 6 decimal strings (uint256s).
- *
- * NOTE: Requires @nomicfoundation/hardhat-ethers (ethers v6) to be loaded in the project.
- */
+/** Basic fetch (no cache). */
 export async function fetchStylusGasTuple(
   hre: HardhatRuntimeEnvironment,
   stylusRpc: string
 ): Promise<string[]> {
-  // Prefered ethers v6 Interface for encoding/decoding
-  const ethersAny = (hre as any).ethers;
-  if (!ethersAny?.Interface) {
-    throw new Error(
-      "fetchStylusGasTuple: ethers Interface not available; add @nomicfoundation/hardhat-ethers to your project."
-    );
-  }
+  const { iface, data } = encodeABI(hre);
+  const result: string = await rpcCall(stylusRpc, "eth_call", [{ to: ADDR_ARBGASINFO, data }, "latest"]);
+  return iface.decodeFunctionResult("getPricesInWei", result).map((x: any) => x.toString());
+}
 
-  const iface = new ethersAny.Interface([
-    "function getPricesInWei() view returns (uint256,uint256,uint256,uint256,uint256,uint256)",
-  ]);
-  const data = iface.encodeFunctionData("getPricesInWei", []);
+/** Process-lifetime cache (per RPC URL), TTL default 5 minutes. */
+const tupleCache = new Map<string, { ts: number; data: string[] }>();
 
-  const body = {
-    jsonrpc: "2.0",
-    id: 1,
-    method: "eth_call",
-    params: [{ to: ADDR_ARBGASINFO, data }, "latest"],
-  };
+export async function fetchStylusGasTupleCached(
+  hre: HardhatRuntimeEnvironment,
+  stylusRpc: string,
+  ttlMs = 5 * 60 * 1000
+): Promise<string[]> {
+  const now = Date.now();
+  const hit = tupleCache.get(stylusRpc);
+  if (hit && now - hit.ts < ttlMs) return hit.data;
 
-  const res = await fetch(stylusRpc, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) throw new Error(`Stylus RPC HTTP ${res.status}`);
-  const j: any = await res.json();
-  if (j?.error) throw new Error(`Stylus RPC error: ${j.error.message ?? "unknown"}`);
-
-  const decoded = iface.decodeFunctionResult("getPricesInWei", j.result);
-  return decoded.map((x: any) => x.toString());
+  const data = await fetchStylusGasTuple(hre, stylusRpc);
+  tupleCache.set(stylusRpc, { ts: now, data });
+  return data;
 }
