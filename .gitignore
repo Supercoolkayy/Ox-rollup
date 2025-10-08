@@ -190,4 +190,4 @@ tests/logs/*.log
 
 
 # nitro-testnode
-nitro-testnode
+nitro-testnode/
