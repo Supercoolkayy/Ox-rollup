@@ -38,6 +38,21 @@ This document describes installation and configuration for the **Stylus-first** 
 
 ---
 
+### Options (Hardhat `arbitrum` block)
+
+| Key                | Type                           | Default    | Notes                                                                                                                                   |
+| ------------------ | ------------------------------ | ---------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `enabled`          | boolean                        | `true`     | Turns the patch on/off.                                                                                                                 |
+| `runtime`          | `"stylus" \| "nitro"`          | `"stylus"` | Stylus-first target.                                                                                                                    |
+| `precompiles.mode` | `"shim" \| "auto" \| "native"` | `"auto"`   | Milestone 3 uses shim path; `auto` gracefully installs shims.                                                                           |
+| `stylusRpc`        | string                         | *(unset)*  | Remote RPC used by tasks when `--stylus` is selected. Can also be set via `STYLUS_RPC`.                                                 |
+| `gas.pricesInWei`  | string[6]                      | *(unset)*  | **Shim order**: `[l2BaseFee, l1BaseFeeEstimate, l1CalldataCost, l1StorageCost, congestionFee, aux]`. Used when no RPC/ cache is chosen. |
+| `arbSysChainId`    | number                         | `42161`    | Returned by `ArbSysShim` at slot 0.                                                                                                     |
+| `costing.enabled`  | boolean                        | `false`    | If implemented, returns a small, stable non-zero `gasUsed` for precompile calls in shim mode (off by default).                          |
+
+
+---
+
 ## 2) Configuration
 
 ### 2.1 `hardhat.config.js` (Stylus-first defaults)

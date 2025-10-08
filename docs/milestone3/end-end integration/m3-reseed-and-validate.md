@@ -275,3 +275,17 @@ npx hardhat --config hardhat.config.js arb:gas-info --stylus
   * `scripts/check-gasinfo-local.js` → prints the tuple
   * `scripts/validate-precompiles.js` → raw selector + contract probe
 
+---
+### Tasks & flags
+
+| Task                | Purpose                                                                              | Key Flags / Params                                                                                                                                | Output (typical)                                                                                      |
+| ------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `arb:install-shims` | One-shot install + readback of shims at `0x…64/0x…6c`.                               | *(none)*                                                                                                                                          | Prints the tuple read from the local shim and success line.                                           |
+| `arb:reseed-shims`  | Reseed `ArbGasInfoShim.__seed([6])` from **Stylus RPC** → **config** → **fallback**. | `--stylus` (force Stylus RPC), `--nitro` (optional), `--cache-ttl <sec>` (optional file cache), `--network localhost` (when using a running node) | Prints chosen source, the tuple applied, and a readback confirmation.                                 |
+| `arb:gas-info`      | Compare **local** tuple vs **remote** tuple (no writes).                             | `--stylus` (or `--nitro`), `--rpc <URL>`, `--json`                                                                                                | Prints side-by-side values and per-index equality markers; JSON mode emits a machine-readable object. |
+
+**Environment keys (honored by tasks)**
+`STYLUS_RPC`, `NITRO_RPC`, `ARB_PRECOMPILES_CONFIG`, plus stability toggles `NODE_OPTIONS=--dns-result-order=ipv4first`, `NODE_NO_HTTP2=1`.
+
+---
+
