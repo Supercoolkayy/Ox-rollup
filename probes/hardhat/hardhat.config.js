@@ -4,7 +4,9 @@ require("@arbitrum/hardhat-patch");
 module.exports = {
   solidity: "0.8.19",
   networks: { 
-    hardhat: { chainId: 42161 }, localhost: { url: "http://127.0.0.1:8549" } },
+    hardhat: { chainId: 42161 }, 
+    localhost: { url: "http://127.0.0.1:8549" } 
+  },
   arbitrum: {
     enabled: true,
     chainId: 42161,
@@ -20,4 +22,7 @@ module.exports = {
   },
  
   },
+  paths: {
+    tests: "test/m3"
+  }
 };

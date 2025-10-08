@@ -7,7 +7,8 @@
     "probe-0x7e": "node scripts/probe-0x7e.js",
     "validate:precompiles": "hardhat run --show-stack-traces scripts/validate-precompiles.js",
     "predeploy:precompiles": "hardhat run scripts/predeploy-precompiles.js",
-    "arb:install-shims": "hardhat --config hardhat.config.js arb:install-shims"
+    "arb:install-shims": "hardhat --config hardhat.config.js arb:install-shims",
+    "test:m3": "hardhat test"
   },
   "dependencies": {
     "chai": "^4.3.4",
