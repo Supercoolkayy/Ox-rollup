@@ -15,12 +15,12 @@ This milestone covers **shim mode**, **Stylus gas reseeding**, and **validation 
 
 ## Outcomes
 
-* **Stylus-first configuration** — default runtime set to Stylus; Nitro is opt-in.
-* **Shim installation** — bytecode predeployed at `0x…64/0x…6c` into a Hardhat chain (ephemeral or persistent).
-* **Reseeding logic** — `ArbGasInfoShim.__seed(uint256[6])` accepts values with the following priority:
+* [**Stylus-first configuration**][arbitrum_patch] — default runtime set to Stylus; Nitro is opt-in.
+* [**Shim installation**][shim_setup] — bytecode [predeployed][install_&_check] at `0x…64/0x…6c` into a Hardhat chain (ephemeral or persistent).
+* [**Reseeding logic**][reseed_task] — `ArbGasInfoShim.__seed(uint256[6])` accepts values with the following priority:
 
   1. **Stylus RPC**
-  2. **`precompiles.config.json`**
+  2. [**`precompiles.config.json`**][precompile_json]
   3. **Built-in fallback**
 * **Validation** — scripts demonstrate successful raw precompile calls and contract-based calls:
 
@@ -116,9 +116,9 @@ Stylus RPC values are already compatible with this order. Nitro tuples, if used,
 
 ## Developer tasks (summary)
 
-* **Shim install** — automatic on first JSON-RPC call (in shim/auto modes) or via a predeploy script.
-* **Reseed** — `arb:reseed-shims` with `--stylus` (or explicit `--rpc`); falls back to config or defaults.
-* **Validate** — run validation to confirm raw selectors and contract calls.
+* [**Shim install**][install_task] — automatic on first JSON-RPC call (in shim/auto modes) or via a predeploy script.
+* [**Reseed**][reseed_task] — `arb:reseed-shims` with `--stylus` (or explicit `--rpc`); falls back to config or defaults.
+* [**Validate**][gas_view_task] — run validation to confirm raw selectors and contract calls.
 
 Detailed setup and validation commands are documented separately.
 
@@ -132,7 +132,7 @@ Detailed setup and validation commands are documented separately.
   * Live Stylus RPC values (when reachable),
   * `precompiles.config.json` values,
   * Built-in fallback tuple.
-* Validation output includes:
+* [Validation][validation_test] output includes:
 
   * `ArbSys arbChainID returned: 42161` (or the configured chainId),
   * A non-zero value for `ArbGasInfo` selector in raw calls,
@@ -151,12 +151,27 @@ Detailed setup and validation commands are documented separately.
 
 ## Glossary
 
-* **Shim** — lightweight contract deployed at a canonical precompile address to emulate behavior in a local EVM.
-* **Stylus** — Arbitrum’s WASM execution environment atop Nitro; this milestone targets Stylus networks as the default runtime.
-* **Precompile** — special address implementing system functionality; `ArbSys` and `ArbGasInfo` are examples on Arbitrum.
-* **Reseed** — writing a new gas-price tuple into the shim’s storage, sourced from RPC/config/fallback.
+* [**Shim**][shims] — lightweight contract deployed at a canonical precompile address to emulate behavior in a local EVM.
+* [**Stylus**][arbitrum_patch] — Arbitrum’s WASM execution environment atop Nitro; this milestone targets Stylus networks as the default runtime.
+* [**Precompile**][precompile_] — special address implementing system functionality; `ArbSys` and `ArbGasInfo` are examples on Arbitrum.
+* [**Reseed**][reseed_task] — writing a new gas-price tuple into the shim’s storage, sourced from RPC/config/fallback.
 
 ---
 
 **Next documents**
-See `m3-setup-and-config.md` for installation and configuration details, `m3-reseed-and-validate.md` for exact commands and expected outputs, and `m3-troubleshooting.md` for common issues and resolutions.
+See [`m3-setup-and-config.md`][setup_&_config_docs] for installation and configuration details, [`m3-reseed-and-validate.md`][reseed_docs] for exact commands and expected outputs, and [`m3-troubleshooting.md`][troubleshooting_docs] for common issues and resolutions.
+
+
+[precompile_json]: https://github.com/Supercoolkayy/Ox-rollup/blob/hardhat-patch/probes/hardhat/precompiles.config.json
+[reseed_task]: https://github.com/Supercoolkayy/Ox-rollup/blob/hardhat-patch/src/hardhat-patch/tasks/arb-reseed-shims.ts
+[install_task]: https://github.com/Supercoolkayy/Ox-rollup/blob/hardhat-patch/src/hardhat-patch/tasks/arb-install-shims.ts
+[gas_view_task]: https://github.com/Supercoolkayy/Ox-rollup/blob/hardhat-patch/src/hardhat-patch/tasks/arb-gas-info.ts
+[validation_test]: https://github.com/Supercoolkayy/Ox-rollup/blob/hardhat-patch/probes/hardhat/scripts/validate-precompiles.js
+[reseed_docs]: https://github.com/Supercoolkayy/Ox-rollup/blob/hardhat-patch/docs/milestone3/end-end%20integration/m3-reseed-and-validate.md
+[setup_&_config_docs]: https://github.com/Supercoolkayy/Ox-rollup/blob/hardhat-patch/docs/milestone3/end-end%20integration/m3-setup-and-config.md
+[troubleshooting_docs]: https://github.com/Supercoolkayy/Ox-rollup/blob/hardhat-patch/docs/milestone3/end-end%20integration/m3-troubleshooting.md
+[shims]: https://github.com/Supercoolkayy/Ox-rollup/tree/hardhat-patch/src/hardhat-patch/shims
+[precompile_]: https://github.com/Supercoolkayy/Ox-rollup/tree/hardhat-patch/src/hardhat-patch/precompiles
+[arbitrum_patch]: https://github.com/Supercoolkayy/Ox-rollup/blob/hardhat-patch/src/hardhat-patch/arbitrum-patch.ts
+[shim_setup]: https://github.com/Supercoolkayy/Ox-rollup/blob/hardhat-patch/src/hardhat-patch/native-precompiles.ts
+[install_&_check]: https://github.com/Supercoolkayy/Ox-rollup/blob/hardhat-patch/src/hardhat-patch/scripts/install-and-check-shims.ts
