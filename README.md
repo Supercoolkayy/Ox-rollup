@@ -167,5 +167,4 @@ chmod +x probes/foundry/test-deposit-flow.sh
 
 ---
 
-**Status**: Milestone 1 Complete  
-**Next**: Ready for Milestone 2 Implementation
+
