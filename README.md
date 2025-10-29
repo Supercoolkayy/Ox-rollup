@@ -81,6 +81,9 @@ These scripts test the Hardhat plugin and its shims.
 # Navigate to a Hardhat project using the plugin
 cd your-hardhat-project
 
+# install dev
+npm install --save-dev @dappsoverapps.com/hardhat-patch
+
 # Run individual probes
 npx hardhat run probes/hardhat/test-arbsys-calls.js
 npx hardhat run probes/hardhat/test-arbgasinfo.js

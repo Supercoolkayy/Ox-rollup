@@ -8,6 +8,21 @@ This document describes installation and configuration for the **Stylus-first** 
 
 * **Node.js:** v22 LTS recommended.
 * **Hardhat:** project includes `@nomicfoundation/hardhat-ethers` (ethers v6).
+
+-----
+
+### **Installation**
+
+Before configuring the plugin, you must first install it as a development dependency in your Hardhat project:
+
+```bash
+npm install --save-dev @dappsoverapps.com/hardhat-patch
+```
+
+-----
+
+
+
 * **Repository layout (relevant parts):**
 
   ```
@@ -59,7 +74,7 @@ This document describes installation and configuration for the **Stylus-first** 
 
 ```js
 require("@nomicfoundation/hardhat-ethers");
-require("@arbitrum/hardhat-patch");     // plugin entry; auto-loads tasks
+require("@dappsoverapps.com/hardhat-patch");     // plugin entry; auto-loads tasks
 
 module.exports = {
   solidity: "0.8.19",

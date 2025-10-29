@@ -92,7 +92,7 @@ This tool is designed for **any developer building within the Arbitrum ecosystem
 
 Our solution is delivered as **two distinct packages** to integrate with your preferred development environment:
 
-### **Hardhat Patch** — `@arbitrum/hardhat-patch`
+### **Hardhat Patch** — `@dappsoverapps.com/hardhat-patch`
 `Plugin architecture with EVM extension`
 * A simple **npm package** that extends the Hardhat Network to support **Arbitrum precompiles** and the **0x7e transaction type**.
 
@@ -115,6 +115,9 @@ It works as a **drop-in replacement** for the standard `anvil` binary.
 ```bash
 # Navigate to a Hardhat project
 cd your-hardhat-project
+
+# install @dappsoverapps.com/hardhat-patch
+npm install --save-dev @dappsoverapps.com/hardhat-patch
 
 # Run individual probes
 npx hardhat run probes/hardhat/test-arbsys-calls.js
