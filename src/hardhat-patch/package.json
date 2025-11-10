@@ -1,20 +1,27 @@
 {
-  "name": "@arbitrum/hardhat-patch",
-  "version": "0.1.0",
+  "name": "@dappsoverapps.com/hardhat-patch",
+  "version": "0.1.2",
   "description": "Hardhat plugin for Arbitrum precompile support",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": ["dist", "src/shims/*.json", "dist/**"],
+  "files": [
+    "dist",
+    "src/shims/*.json",
+    "dist/**"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
-    "build": "tsc -p tsconfig.json && mkdir -p dist/shims && (cp -R src/hardhat-patch/shims/*.json dist/shims/ 2>/dev/null || true)",
+    "build": "tsc -p tsconfig.json && node -e \"const fs=require('fs');const p=require('path');const d='dist/shims';fs.mkdirSync(d,{recursive:true});['ArbSysShim.json','ArbGasInfoShim.json'].forEach(f=>{try{fs.copyFileSync(p.join('shims',f),p.join(d,f));}catch(e){}});\"",
     "test": "mocha --require ts-node/register 'tests/**/*.test.ts'",
     "lint": "eslint src/**/*.ts",
     "prepare": "npm run build",
     "clean": "rm -rf dist"
   },
   "exports": {
-  "require": "./dist/index.js",
-  "default": "./dist/index.js"
+    "require": "./dist/index.js",
+    "default": "./dist/index.js"
   },
   "keywords": [
     "hardhat",
@@ -48,7 +55,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/OffchainLabs/ox-rollup.git"
+    "url": "git+https://github.com/OffchainLabs/ox-rollup.git"
   },
   "bugs": {
     "url": "https://github.com/OffchainLabs/ox-rollup/issues"

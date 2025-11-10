@@ -1,130 +1,88 @@
 # Arbitrum Local Development Compatibility Project
 
-## Project Overview
+## 1\. Project Overview
 
-**Goal**: Local testing patch that adds native support for Arbitrum precompiles (ArbSys at 0x64, ArbGasInfo at 0x6c) and transaction type 0x7e (deposits) to Hardhat and Foundry (Anvil).
+**Goal**: To create local testing patches that add native support for Arbitrum-specific features to Hardhat and Foundry (Anvil).
 
-**Why**: Today, Hardhat/Anvil can't call Arbitrum precompiles or parse 0x7e; devs must deploy to testnet to validate core flows.
+**Why**: Standard local EVM nodes like Hardhat Network and Anvil cannot execute or parse core Arbitrum functionality. This includes calls to precompiles like `ArbSys` and `ArbGasInfo` or the L1-to-L2 `0x7e` deposit transaction type. This forces developers to deploy to a live testnet to validate core flows, which is slow and inefficient.
 
-## Milestone 1 Status: COMPLETED
+This project provides the necessary tools to enable high-fidelity local testing of Arbitrum-specific logic.
 
-Milestone 1 deliverables have been completed and are ready for review. All specifications have been gathered and documented:
+-----
 
-### Deliverables Completed
+## 2\. Technical Approach
+**Deposit Transaction (0x7e) Support**: The node can natively parse and execute Arbitrum's unique L1-to-L2 deposit transactions, enabling local testing of retryable tickets. also
+The project provides two different solutions tailored to each development environment.
 
-1. **[Compatibility Matrix](docs/m1-compatibility-matrix.md)**
+### For Foundry (Anvil)
 
-   - Comprehensive analysis of Arbitrum features vs Hardhat and Foundry
-   - Priority-based feature categorization (P0, P1, P2)
-   - Technical root cause analysis
-   - Implementation feasibility assessment
+This solution provides a specialized version of Anvil patched to natively support Arbitrum's chain-specific features.
 
-2. **[Compatibility Matrix (CSV)](docs/m1-compatibility-matrix.csv)**
+  * **Native Precompile Emulation**: Provides built-in emulation for `ArbSys` (at `0x...64`) and `ArbGasInfo` (at `0x...6c`).
+  * **Seamless Activation**: Arbitrum-specific features are enabled with a simple `--arbitrum` command-line flag.
 
-   - Machine-readable format for analysis
-   - Detailed method-by-method compatibility status
-   - Complexity and implementation notes
+### For Hardhat
 
-3. **[Technical Design Brief](docs/m1-design-brief.md)**
+This solution uses a Hardhat plugin that deploys **shims**—lightweight, mock contract implementations—to the canonical precompile addresses on your local Hardhat network.
 
-   - Implementation-ready design for engineers in M2
-   - Architecture overview for both Hardhat and Foundry
-   - Detailed implementation strategies
-   - Configuration schemas and testing strategies
+  * **Shim Contracts**: Deploys `ArbSysShim.sol` and `ArbGasInfoShim.sol` to `0x...64` and `0x...6c` respectively, allowing your tests to interact with them as if they were the real precompiles.
+  * **Stylus-First by Default**: The plugin is optimized for Stylus development, using its 6-tuple gas-price format out of the box.
+  * **Flexible Data Seeding**: The shims can be "seeded" with realistic on-chain data in a flexible order:
+    1.  Fetches live data from a `stylusRpc` (e.g., Arbitrum Sepolia).
+    2.  Uses deterministic values from a local `precompiles.config.json` file.
+    3.  Uses built-in fallback values if no other source is available.
 
-4. **[Technical Specifications](docs/m1-specification-details.md)**
+-----
 
-   - Complete Arbitrum Nitro precompile specifications
-   - Detailed function signatures and return types
-   - Transaction type 0x7e envelope format and execution semantics
-   - Method selectors and implementation priorities
+## 3\. Developer Documentation
 
-5. **Probe Files** (Optional)
-   - **[Hardhat Probes](probes/hardhat/)**
-     - `test-arbsys-calls.js` - Tests ArbSys precompile functionality
-     - `test-arbgasinfo.js` - Tests ArbGasInfo precompile functionality
-     - `test-deposit-tx.js` - Tests deposit transaction (0x7e) support
-   - **[Foundry Probes](probes/foundry/)**
-     - `test-precompiles.sol` - Solidity tests for precompiles
-     - `test-deposit-flow.sh` - Shell script for deposit transaction testing
+All technical specifications, compatibility analyses, and implementation designs are located in the `/docs` directory.
 
-## Continue Reading
+  * **[Technical Design Brief](docs/design-brief.md)**: The primary implementation-ready design for engineers, covering architecture for both Hardhat and Foundry.
+  * **[Compatibility Matrix](docs/compatibility-matrix.md)**: A comprehensive analysis of Arbitrum features vs. Hardhat and Foundry, including priority and feasibility.
+  * **[Technical Specifications](docs/Architecture-and-Internals/full-implements.md)**: Complete specifications for Arbitrum Nitro precompiles and the `0x7e` transaction type.
+  * **[Anvil Implementation Details](docs/Anvil-Arbitrum/)**: Documentation specific to the Anvil patch.
+  * **[Hardhat Implementation Details](docs/Hardhat-Arbitrum/)**: Documentation specific to the Hardhat plugin and shims.
+  * **[Project Architecture](docs/Architecture-and-Internals/phase-2/)**: Further technical design details.
 
-For detailed information about the project implementation and current status:
+-----
 
-- **[Milestone 2 Implementation](docs/milestone2/)** - Current development progress
-- **[Verification Reports](docs/verification/)** - Quality assurance and validation
-- **[Project Architecture](docs/milestone2/ARCH_STEP1.md)** - Technical design details
-
-## Key Findings
-
-### Current State
-
-- **All target Arbitrum features are currently unsupported** in both Hardhat Network and Foundry Anvil
-- Developers must deploy to testnet to validate Arbitrum-specific functionality
-- No existing workarounds provide full local testing capabilities
-
-### Implementation Feasibility
-
-- **ArbSys Precompile (0x64)**: Medium complexity, minimal state requirements
-- **ArbGasInfo Precompile (0x6c)**: High complexity, requires gas pricing algorithms
-- **Transaction Type 0x7e**: High complexity, requires RLP parsing and new transaction flow
-
-### Technical Approach
-
-- **Hardhat**: Plugin architecture with EVM extension
-- **Foundry**: revm precompile extension with transaction type support
-
-## Next Steps (Milestone 2)
-
-With Milestone 1 research complete, the project is ready to proceed to implementation:
-
-1. **Plugin/Extension Development**
-
-   - Hardhat plugin scaffolding
-   - Anvil revm extension
-   - Precompile registration mechanisms
-
-2. **Core Feature Implementation**
-
-   - P0 priority methods for both precompiles
-   - Transaction type 0x7e parsing and execution
-   - Basic gas calculation algorithms
-
-3. **Testing & Validation**
-   - Unit tests for each precompile method
-   - Integration tests for deposit transactions
-   - Performance regression testing
-
-## Project Structure
+## 4\. Project Structure
 
 ```
 ox-rollup/
 ├── docs/
-│   ├── m1-compatibility-matrix.md      # Main compatibility analysis
-│   ├── m1-compatibility-matrix.csv     # CSV format for analysis
-│   ├── m1-design-brief.md              # Technical implementation guide
-│   ├── m1-specification-details.md     # Complete technical specifications
-│   ├── milestone2/                     # Current development progress
-│   └── verification/                   # Quality assurance reports
+│   ├── Anvil-Arbitrum/               # Anvil patch implementation docs
+│   ├── Architecture-and-Internals/  # Low-level specs and design docs
+│   ├── Hardhat-Arbitrum/            # Hardhat plugin implementation docs
+│   ├── compatibility-matrix.csv     # Machine-readable compatibility data
+│   ├── compatibility-matrix.md    # Main compatibility analysis
+│   ├── design-brief.md              # Core technical implementation guide
+│   └── specification-details.md     # (Legacy) Now in Architecture-and-Internals
 ├── probes/
-│   ├── hardhat/                        # Hardhat testing scripts
-│   │   ├── test-arbsys-calls.js
-│   │   ├── test-arbgasinfo.js
-│   │   └── test-deposit-tx.js
-│   └── foundry/                        # Foundry testing scripts
-│       ├── test-precompiles.sol
-│       └── test-deposit-flow.sh
-└── README.md                           # This file
+│   ├── hardhat/                        # Hardhat testing scripts
+│   └── foundry/                        # Foundry testing scripts
+├── crates/                             # Rust crates (for Anvil patch)
+├── src/                                # Typescript source (for Hardhat plugin)
+└── README.md                           
 ```
 
-## Running the Probes
+-----
+
+## 5\. Running Tests (Probes)
+
+The `/probes` directory contains test suites used to validate the functionality of the patches and shims.
 
 ### Hardhat Probes
 
+These scripts test the Hardhat plugin and its shims.
+
 ```bash
-# Navigate to a Hardhat project
+# Navigate to a Hardhat project using the plugin
 cd your-hardhat-project
+
+# install dev
+npm install --save-dev @dappsoverapps.com/hardhat-patch
 
 # Run individual probes
 npx hardhat run probes/hardhat/test-arbsys-calls.js
@@ -133,6 +91,8 @@ npx hardhat run probes/hardhat/test-deposit-tx.js
 ```
 
 ### Foundry Probes
+
+These tests validate the patched Anvil node.
 
 ```bash
 # Navigate to a Foundry project
@@ -145,27 +105,3 @@ forge test --match-contract ArbitrumPrecompileTest -vvv
 chmod +x probes/foundry/test-deposit-flow.sh
 ./probes/foundry/test-deposit-flow.sh
 ```
-
-## Documentation
-
-- **[Compatibility Matrix](docs/m1-compatibility-matrix.md)**: Comprehensive feature-by-feature analysis
-- **[Design Brief](docs/m1-design-brief.md)**: Implementation-ready technical specifications
-- **[Probe Files](probes/)**: Testing utilities for validation
-
-## Dependencies
-
-- **Hardhat**: JavaScript-based EVM with plugin architecture
-- **Foundry**: Rust-based revm with performance focus
-- **Arbitrum**: Layer 2 scaling solution with custom precompiles
-
-## Notes
-
-- All findings are based on current state analysis
-- Implementation complexity estimates are preliminary
-- Probe files provide validation capabilities for future development
-- Design brief is ready for engineering team implementation
-
----
-
-**Status**: Milestone 1 Complete  
-**Next**: Ready for Milestone 2 Implementation

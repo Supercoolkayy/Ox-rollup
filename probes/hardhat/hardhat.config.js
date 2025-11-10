@@ -1,5 +1,5 @@
 require("@nomicfoundation/hardhat-ethers");
-require("@arbitrum/hardhat-patch");
+require("@dappsoverapps.com/hardhat-patch");
 
 module.exports = {
   solidity: "0.8.19",
@@ -20,9 +20,10 @@ module.exports = {
     enabled: false,
     emulateNitro: false,
   },
- 
   },
   paths: {
     tests: "test/m3"
   }
 };
+
+
