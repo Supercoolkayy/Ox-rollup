@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 // Interface stubs for ArbSys precompile
 interface ArbSys {
-    function arbChainId() external view returns (uint256);
+    function arbChainID() external view returns (uint256);
     function arbBlockNumber() external view returns (uint256);
 }
 
@@ -27,9 +27,9 @@ contract ArbProbes {
      */
     function getArbChainId() external view returns (uint256 chainId) {
         (bool success, bytes memory data) = ARBSYS_ADDRESS.staticcall(
-            abi.encodeWithSignature("arbChainId()")
+            abi.encodeWithSignature("arbChainID()")
         );
-        require(success, "ArbSys: arbChainId call failed");
+        require(success, "ArbSys: arbChainID call failed");
         chainId = abi.decode(data, (uint256));
     }
 

@@ -187,3 +187,9 @@ probes/hardhat/typechain-types/
 src/hardhat-patch/dist/
 tests/logs/*.log
 !tests/logs/step*.log
+
+
+# nitro-testnode
+nitro-testnode/
+
+nitro-testnode

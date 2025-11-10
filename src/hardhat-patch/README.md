@@ -1,4 +1,4 @@
-# @arbitrum/hardhat-patch
+# @dappsoverapps.com/hardhat-patch
 
 A Hardhat plugin that adds native support for Arbitrum precompiles to local development networks.
 
@@ -12,7 +12,7 @@ A Hardhat plugin that adds native support for Arbitrum precompiles to local deve
 ## Installation
 
 ```bash
-npm install @arbitrum/hardhat-patch
+npm install @dappsoverapps.com/hardhat-patch
 ```
 
 ## Usage
@@ -67,7 +67,7 @@ const config: HardhatUserConfig = {
 ### Programmatic Usage
 
 ```typescript
-import { HardhatArbitrumPatch } from "@arbitrum/hardhat-patch";
+import { HardhatArbitrumPatch } from "@dappsoverapps.com/hardhat-patch";
 
 // Create plugin instance
 const arbitrumPatch = new HardhatArbitrumPatch({

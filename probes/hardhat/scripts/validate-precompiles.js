@@ -5,13 +5,11 @@
  * within the Hardhat runtime environment.
  */
 
-const { ethers } = require("hardhat");
+const hre = require("hardhat");
+const { ethers } = hre;
 
 async function main() {
   console.log(" Validating Arbitrum Precompiles in Hardhat Context...\n");
-
-  // Get the Hardhat runtime environment
-  const hre = require("hardhat");
 
   // Check if our patch is available
   const arbitrumPatch = hre.arbitrumPatch || hre.arbitrum;
@@ -83,19 +81,21 @@ async function main() {
     console.log("❌ ArbGasInfo getL1BaseFeeEstimate failed");
   }
 
+ 
+
   // Test contract deployment and precompile calls
   console.log("\n📄 Testing contract deployment and precompile calls...");
   try {
     const ArbProbesFactory = await ethers.getContractFactory("ArbProbes");
-    const arbProbes = await ArbProbesFactory.deploy();
-    await arbProbes.deployed();
-
-    console.log(`ArbProbes contract deployed at: ${arbProbes.address}`);
+    const arbProbes = await ArbProbesFactory.deploy();          // v6
+    await arbProbes.waitForDeployment();                        // v6
+    const addr = await arbProbes.getAddress();                  // v6
+    console.log(`ArbProbes contract deployed at: ${addr}`);
 
     // Try to call ArbSys through the contract
     try {
-      const chainId = await arbProbes.getArbChainId();
-      console.log(`Contract ArbSys call returned: ${chainId}`);
+        const chainId = await arbProbes.getArbChainId();
+        console.log(`Contract ArbSys call returned: ${chainId.toString?.() ?? chainId}`);
     } catch (error) {
       console.log(
         `⚠️  Contract ArbSys call failed (expected for unpatched nodes): ${error.message}`
@@ -105,7 +105,7 @@ async function main() {
     // Try to call ArbGasInfo through the contract
     try {
       const l1GasFees = await arbProbes.getCurrentTxL1GasFees();
-      console.log(`Contract ArbGasInfo call returned: ${l1GasFees}`);
+     console.log(`Contract ArbGasInfo call returned: ${l1GasFees.toString?.() ?? l1GasFees}`);
     } catch (error) {
       console.log(
         `⚠️  Contract ArbGasInfo call failed (expected for unpatched nodes): ${error.message}`
