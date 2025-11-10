@@ -1,0 +1,29 @@
+{
+  "name": "ox-rollup",
+  "version": "1.0.0",
+  "description": "Arbitrum precompile and 0x7e transaction support for Anvil",
+  "type": "commonjs",
+  "scripts": {
+    "build": "tsc",
+    "test": "mocha --require ts-node/register --timeout 10000 'tests/**/*.test.ts'",
+    "test:unit": "mocha --require ts-node/register --timeout 10000 'tests/milestone2/*.test.ts'",
+    "test:integration": "mocha --require ts-node/register --timeout 10000 'tests/integration/*.test.ts'",
+    "test:stress": "node tests/load/simple-stress.js",
+    "test:rust": "cd crates/anvil-arbitrum && cargo test",
+    "test:all": "npm run test:rust && npm run test:unit && npm run test:integration && npm run test:stress"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.3.5",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "^24.3.0",
+    "chai": "^4.3.7",
+    "ethers": "^5.8.0",
+    "hardhat": "^3.0.3",
+    "mocha": "^10.2.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "command": "^1.1.1"
+  }
+}

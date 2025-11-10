@@ -83,20 +83,20 @@ async function testRLPEncoding() {
     // Encode the fields using RLP
     const encodedFields = ethers.utils.RLP.encode(depositFields);
     console.log("    RLP encoding successful");
-    console.log(`   📊 Encoded length: ${encodedFields.length} bytes`);
-    console.log(`   📊 Encoded data: ${encodedFields}`);
+    console.log(`    Encoded length: ${encodedFields.length} bytes`);
+    console.log(`    Encoded data: ${encodedFields}`);
 
     // Try to decode to verify
     try {
       const decodedFields = ethers.utils.RLP.decode(encodedFields);
       console.log("    RLP decoding successful");
-      console.log(`   📊 Decoded fields: ${decodedFields.length}`);
+      console.log(`    Decoded fields: ${decodedFields.length}`);
 
       // Verify first field (sourceHash)
       if (decodedFields[0].length === 32) {
         console.log("    Source hash field correctly encoded/decoded");
       } else {
-        console.log("   ⚠️  Source hash field encoding issue");
+        console.log("    Source hash field encoding issue");
       }
 
       return true;
@@ -116,15 +116,13 @@ async function testTransactionTypeSupport() {
   try {
     // Check if the network supports the deposit transaction type
     const network = await ethers.provider.getNetwork();
-    console.log(
-      `   📊 Network: ${network.name} (Chain ID: ${network.chainId})`
-    );
+    console.log(`    Network: ${network.name} (Chain ID: ${network.chainId})`);
 
     // Try to create a transaction with type 0x7e
     const [signer] = await ethers.getSigners();
     const signerAddress = await signer.getAddress();
 
-    console.log("   🔍 Testing transaction type 0x7e acceptance...");
+    console.log("    Testing transaction type 0x7e acceptance...");
 
     // Create a mock deposit transaction
     const mockDepositTx = {
@@ -139,7 +137,7 @@ async function testTransactionTypeSupport() {
       // This will likely fail since Hardhat doesn't support 0x7e yet
       const tx = await signer.sendTransaction(mockDepositTx);
       console.log("    Transaction type 0x7e accepted!");
-      console.log(`   📊 Transaction hash: ${tx.hash}`);
+      console.log(`    Transaction hash: ${tx.hash}`);
       return true;
     } catch (txError) {
       console.log("    Transaction type 0x7e not supported");
@@ -169,7 +167,7 @@ async function testRPCCompatibility() {
 
   try {
     // Test eth_sendRawTransaction with 0x7e transaction
-    console.log("   🔍 Testing eth_sendRawTransaction...");
+    console.log("    Testing eth_sendRawTransaction...");
 
     // Create a mock raw transaction (this won't work without 0x7e support)
     const mockRawTx = "0x7e" + ethers.utils.randomBytes(64).toString("hex");
@@ -179,7 +177,7 @@ async function testRPCCompatibility() {
         mockRawTx,
       ]);
       console.log("    eth_sendRawTransaction accepted 0x7e transaction");
-      console.log(`   📊 Result: ${result}`);
+      console.log(`    Result: ${result}`);
       return true;
     } catch (rpcError) {
       console.log("    eth_sendRawTransaction rejected 0x7e transaction");
@@ -216,7 +214,7 @@ async function testContractInteraction() {
     console.log(`    Test contract deployed at: ${testContract.address}`);
 
     // Test if the contract can access Arbitrum-specific features
-    console.log("   🔍 Testing contract access to Arbitrum features...");
+    console.log("    Testing contract access to Arbitrum features...");
 
     try {
       // Try to call ArbSys precompile from the contract
@@ -265,7 +263,7 @@ async function main() {
 
   // Summary
   console.log("\n" + "=".repeat(70));
-  console.log("📊 DEPOSIT TRANSACTION PROBE RESULTS SUMMARY");
+  console.log(" DEPOSIT TRANSACTION PROBE RESULTS SUMMARY");
   console.log("=".repeat(70));
 
   console.log(
@@ -304,9 +302,9 @@ async function main() {
     console.log("   3. Implement RLP parsing for deposit transactions");
     console.log("   4. Add RPC handling for 0x7e transactions");
   } else if (supportedFeatures === 5) {
-    console.log("\n🎉 Full deposit transaction support is working!");
+    console.log("\n Full deposit transaction support is working!");
   } else {
-    console.log("\n⚠️  Partial deposit transaction support detected");
+    console.log("\n Partial deposit transaction support detected");
     console.log(
       "   Some features work, but full 0x7e support requires implementation"
     );

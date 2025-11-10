@@ -35,11 +35,11 @@ contract ArbitrumPrecompileTest is Test {
     }
     
     function testArbSysPrecompileAccessibility() public view {
-        console.log("🔍 Testing ArbSys precompile accessibility...");
+        console.log(" Testing ArbSys precompile accessibility...");
         
         // Check if precompile has code
         uint256 codeSize = ARBSYS_ADDRESS.code.length;
-        console.log("   📊 Code size at 0x64:", codeSize);
+        console.log("    Code size at 0x64:", codeSize);
         
         if (codeSize > 0) {
             console.log("    ArbSys precompile is accessible");
@@ -53,11 +53,11 @@ contract ArbitrumPrecompileTest is Test {
     }
     
     function testArbGasInfoPrecompileAccessibility() public view {
-        console.log("\n🔍 Testing ArbGasInfo precompile accessibility...");
+        console.log("\n Testing ArbGasInfo precompile accessibility...");
         
         // Check if precompile has code
         uint256 codeSize = ARBGASINFO_ADDRESS.code.length;
-        console.log("   📊 Code size at 0x6C:", codeSize);
+        console.log("    Code size at 0x6C:", codeSize);
         
         if (codeSize > 0) {
             console.log("    ArbGasInfo precompile is accessible");
@@ -71,7 +71,7 @@ contract ArbitrumPrecompileTest is Test {
     }
     
     function testArbSysMethods() public {
-        console.log("\n🔍 Testing ArbSys precompile methods...");
+        console.log("\n Testing ArbSys precompile methods...");
         
         // Test arbChainID()
         console.log("   Testing arbChainID()...");
@@ -105,7 +105,7 @@ contract ArbitrumPrecompileTest is Test {
     }
     
     function testArbGasInfoMethods() public {
-        console.log("\n🔍 Testing ArbGasInfo precompile methods...");
+        console.log("\n Testing ArbGasInfo precompile methods...");
         
         // Test getPricesInWei()
         console.log("   Testing getPricesInWei()...");
@@ -139,18 +139,18 @@ contract ArbitrumPrecompileTest is Test {
     }
     
     function testGasCalculationAccuracy() public view {
-        console.log("\n🔍 Testing gas calculation accuracy...");
+        console.log("\n Testing gas calculation accuracy...");
         
         // Get current block gas limit
         uint256 gasLimit = block.gaslimit;
-        console.log("   📊 Current block gas limit:", gasLimit);
+        console.log("    Current block gas limit:", gasLimit);
         
         // Get current gas price (if available)
         uint256 gasPrice = tx.gasprice;
-        console.log("   📊 Current transaction gas price:", gasPrice);
+        console.log("    Current transaction gas price:", gasPrice);
         
         // Try to get L1 base fee estimate from ArbGasInfo
-        console.log("   🔍 Attempting to get L1 base fee estimate...");
+        console.log("    Attempting to get L1 base fee estimate...");
         
         // This is a view function call that might fail
         try this.callArbGasInfo(GET_L1_BASE_FEE_ESTIMATE) {
@@ -197,7 +197,7 @@ contract ArbitrumPrecompileTest is Test {
     
     function testSummary() public view {
         console.log("\n" + string(abi.encodePacked("=", "=", "=", "=", "=", "=", "=", "=", "=", "=")));
-        console.log("📊 ARBITRUM PRECOMPILE TEST SUMMARY");
+        console.log(" ARBITRUM PRECOMPILE TEST SUMMARY");
         console.log(string(abi.encodePacked("=", "=", "=", "=", "=", "=", "=", "=", "=", "=")));
         
         console.log("This test suite validates Arbitrum precompile functionality");

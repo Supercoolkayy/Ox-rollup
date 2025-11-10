@@ -1,0 +1,32 @@
+{
+  "arbSysChainId": 42161,
+   "runtime": "stylus",
+  
+  "gas": {
+    "pricesInWei": ["69440","1","2000000000000","100000000","0","1"]
+  },
+  "seedFromNitro": true,
+  "nitroRpc": "http://127.0.0.1:8547",
+   "stylusRpc": "https://sepolia-rollup.arbitrum.io/rpc"
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

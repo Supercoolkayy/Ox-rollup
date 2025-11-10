@@ -1,0 +1,47 @@
+{
+  "l1BaseFee": "20000000000",
+  "gasPriceComponents": {
+    "l2BaseFee": "1000000000",
+    "l1CalldataCost": "16",
+    "l1StorageCost": "0",
+    "congestionFee": "0"
+  },
+  "metadata": {
+    "description": "Mock gas configuration for local Arbitrum development",
+    "version": "1.0.0",
+    "lastUpdated": "2024-01-01T00:00:00Z",
+    "source": "Hardhat Arbitrum Patch Plugin"
+  },
+  "networks": {
+    "arbitrum-one": {
+      "chainId": 42161,
+      "l1BaseFee": "20000000000",
+      "gasPriceComponents": {
+        "l2BaseFee": "1000000000",
+        "l1CalldataCost": "16",
+        "l1StorageCost": "0",
+        "congestionFee": "0"
+      }
+    },
+    "arbitrum-goerli": {
+      "chainId": 421613,
+      "l1BaseFee": "15000000000",
+      "gasPriceComponents": {
+        "l2BaseFee": "800000000",
+        "l1CalldataCost": "16",
+        "l1StorageCost": "0",
+        "congestionFee": "0"
+      }
+    },
+    "arbitrum-sepolia": {
+      "chainId": 421614,
+      "l1BaseFee": "12000000000",
+      "gasPriceComponents": {
+        "l2BaseFee": "600000000",
+        "l1CalldataCost": "16",
+        "l1StorageCost": "0",
+        "congestionFee": "0"
+      }
+    }
+  }
+}

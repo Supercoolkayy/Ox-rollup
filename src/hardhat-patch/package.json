@@ -1,0 +1,64 @@
+{
+  "name": "@dappsoverapps.com/hardhat-patch",
+  "version": "0.1.2",
+  "description": "Hardhat plugin for Arbitrum precompile support",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src/shims/*.json",
+    "dist/**"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node -e \"const fs=require('fs');const p=require('path');const d='dist/shims';fs.mkdirSync(d,{recursive:true});['ArbSysShim.json','ArbGasInfoShim.json'].forEach(f=>{try{fs.copyFileSync(p.join('shims',f),p.join(d,f));}catch(e){}});\"",
+    "test": "mocha --require ts-node/register 'tests/**/*.test.ts'",
+    "lint": "eslint src/**/*.ts",
+    "prepare": "npm run build",
+    "clean": "rm -rf dist"
+  },
+  "exports": {
+    "require": "./dist/index.js",
+    "default": "./dist/index.js"
+  },
+  "keywords": [
+    "hardhat",
+    "arbitrum",
+    "precompiles",
+    "plugin",
+    "ethereum",
+    "l2"
+  ],
+  "author": "Arbitrum Team",
+  "license": "MIT",
+  "peerDependencies": {
+    "hardhat": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "eslint": "^8.0.0",
+    "mocha": "^9.0.0",
+    "ts-node": "^10.0.0",
+    "typescript": "^4.7.0"
+  },
+  "dependencies": {
+    "@nomicfoundation/ethereumjs-util": "^9.0.2",
+    "ethers": "^5.8.0",
+    "hardhat": "^2.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OffchainLabs/ox-rollup.git"
+  },
+  "bugs": {
+    "url": "https://github.com/OffchainLabs/ox-rollup/issues"
+  },
+  "homepage": "https://github.com/OffchainLabs/ox-rollup#readme"
+}

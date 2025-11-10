@@ -68,7 +68,7 @@ async function testGasPricingMethods() {
 
     if (result && result !== "0x") {
       console.log("    getPricesInWei() returned data");
-      console.log(`   📊 Raw result: ${result}`);
+      console.log(`    Raw result: ${result}`);
 
       // Parse the result (expected: packed uint256 values)
       try {
@@ -96,7 +96,7 @@ async function testGasPricingMethods() {
         );
         results.getPricesInWei = true;
       } catch (decodeError) {
-        console.log(`   ⚠️  Result parsing failed: ${decodeError.message}`);
+        console.log(`    Result parsing failed: ${decodeError.message}`);
         results.getPricesInWei = true; // Method works, parsing issue
       }
     } else {
@@ -118,7 +118,7 @@ async function testGasPricingMethods() {
 
     if (result && result !== "0x") {
       console.log("    getL1BaseFeeEstimate() returned data");
-      console.log(`   📊 Raw result: ${result}`);
+      console.log(`    Raw result: ${result}`);
       results.getL1BaseFeeEstimate = true;
     } else {
       console.log("    getL1BaseFeeEstimate() returned empty result");
@@ -147,7 +147,7 @@ async function testFeeEstimationMethods() {
 
     if (result && result !== "0x") {
       console.log("    getPricesInArbGasWithAggregator() returned data");
-      console.log(`   📊 Raw result: ${result}`);
+      console.log(`    Raw result: ${result}`);
       results.getPricesInArbGasWithAggregator = true;
     } else {
       console.log(
@@ -172,7 +172,7 @@ async function testFeeEstimationMethods() {
 
     if (result && result !== "0x") {
       console.log("    getCurrentTxL1GasFees() returned data");
-      console.log(`   📊 Raw result: ${result}`);
+      console.log(`    Raw result: ${result}`);
       results.getCurrentTxL1GasFees = true;
     } else {
       console.log("    getCurrentTxL1GasFees() returned empty result");
@@ -201,7 +201,7 @@ async function testSystemParameterMethods() {
 
     if (result && result !== "0x") {
       console.log("    getGasAccountingParams() returned data");
-      console.log(`   📊 Raw result: ${result}`);
+      console.log(`    Raw result: ${result}`);
       results.getGasAccountingParams = true;
     } else {
       console.log("    getGasAccountingParams() returned empty result");
@@ -222,7 +222,7 @@ async function testSystemParameterMethods() {
 
     if (result && result !== "0x") {
       console.log("    getGasBacklog() returned data");
-      console.log(`   📊 Raw result: ${result}`);
+      console.log(`    Raw result: ${result}`);
       results.getGasBacklog = true;
     } else {
       console.log("    getGasBacklog() returned empty result");
@@ -243,7 +243,7 @@ async function testGasCalculationAccuracy() {
     // Get current gas price from network
     const networkGasPrice = await ethers.provider.getGasPrice();
     console.log(
-      `   📊 Network gas price: ${ethers.utils.formatUnits(
+      `    Network gas price: ${ethers.utils.formatUnits(
         networkGasPrice,
         "gwei"
       )} gwei`
@@ -259,7 +259,7 @@ async function testGasCalculationAccuracy() {
       if (l1EstimateResult && l1EstimateResult !== "0x") {
         const l1Estimate = ethers.BigNumber.from(l1EstimateResult);
         console.log(
-          `   📊 L1 gas price estimate: ${ethers.utils.formatUnits(
+          `    L1 gas price estimate: ${ethers.utils.formatUnits(
             l1Estimate,
             "gwei"
           )} gwei`
@@ -267,14 +267,14 @@ async function testGasCalculationAccuracy() {
 
         // Calculate ratio
         const ratio = l1Estimate.mul(100).div(networkGasPrice);
-        console.log(`   📊 L1/L2 gas price ratio: ${ratio.toString()}%`);
+        console.log(`    L1/L2 gas price ratio: ${ratio.toString()}%`);
 
         if (ratio.gt(100)) {
           console.log(
             "    L1 gas price > L2 gas price (expected for Arbitrum)"
           );
         } else {
-          console.log("   ⚠️  L1 gas price <= L2 gas price (unexpected)");
+          console.log("    L1 gas price <= L2 gas price (unexpected)");
         }
       }
     } catch (error) {
@@ -299,7 +299,7 @@ async function main() {
 
   if (!isAccessible) {
     console.log("\n" + "=".repeat(70));
-    console.log("📊 PROBE RESULTS SUMMARY");
+    console.log(" PROBE RESULTS SUMMARY");
     console.log("=".repeat(70));
     console.log(" ArbGasInfo precompile not accessible");
     console.log("\n💡 To enable Arbitrum features:");
@@ -330,7 +330,7 @@ async function main() {
 
   // Summary
   console.log("\n" + "=".repeat(70));
-  console.log("📊 ARBGASINFO PROBE RESULTS SUMMARY");
+  console.log(" ARBGASINFO PROBE RESULTS SUMMARY");
   console.log("=".repeat(70));
 
   console.log(`Precompile Accessibility:  ENABLED`);
@@ -362,11 +362,9 @@ async function main() {
   console.log("\n" + "=".repeat(70));
 
   if (workingMethods === totalMethods) {
-    console.log("🎉 All ArbGasInfo methods are working correctly!");
+    console.log(" All ArbGasInfo methods are working correctly!");
   } else if (workingMethods >= totalMethods * 0.7) {
-    console.log(
-      "⚠️  Most ArbGasInfo methods are working, some issues detected"
-    );
+    console.log(" Most ArbGasInfo methods are working, some issues detected");
   } else {
     console.log(" Significant issues with ArbGasInfo precompile detected");
   }
