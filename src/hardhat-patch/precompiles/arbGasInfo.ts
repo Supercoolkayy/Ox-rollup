@@ -131,16 +131,16 @@ export class ArbGasInfoHandler implements PrecompileHandler {
 
     try {
       switch (selectorHex) {
-        case "4d2301cc": // getPricesInWei()
+        case "41b247a8": // getPricesInWei()
           return this.handleGetPricesInWei(ctx);
 
-        case "a3b1b31d": // getL1BaseFeeEstimate()
+        case "f5d6ded7": // getL1BaseFeeEstimate()
           return this.handleGetL1BaseFeeEstimate(ctx);
 
-        case "b1b1b31d": // getCurrentTxL1GasFees()
+        case "c6f7de0e": // getCurrentTxL1GasFees()
           return this.handleGetCurrentTxL1GasFees(calldata, ctx);
 
-        case "c1c1c31d": // getPricesInArbGas()
+        case "02199f34": // getPricesInArbGas()
           return this.handleGetPricesInArbGas(ctx);
 
         default:
@@ -176,16 +176,16 @@ export class ArbGasInfoHandler implements PrecompileHandler {
 
     try {
       switch (selectorHex) {
-        case "4d2301cc": // getPricesInWei()
+        case "41b247a8": // getPricesInWei()
           return this.handleGetPricesInWeiLegacy(context);
 
-        case "a3b1b31d": // getL1BaseFeeEstimate()
+        case "f5d6ded7": // getL1BaseFeeEstimate()
           return this.handleGetL1BaseFeeEstimateLegacy(context);
 
-        case "b1b1b31d": // getCurrentTxL1GasFees()
+        case "c6f7de0e": // getCurrentTxL1GasFees()
           return this.handleGetCurrentTxL1GasFeesLegacy(calldata, context);
 
-        case "c1c1c31d": // getPricesInArbGas()
+        case "02199f34": // getPricesInArbGas()
           return this.handleGetPricesInArbGasLegacy(context);
 
         default:
@@ -223,11 +223,11 @@ export class ArbGasInfoHandler implements PrecompileHandler {
       .join("");
 
     switch (selector) {
-      case "4d2301cc": // getPricesInWei()
+      case "41b247a8": // getPricesInWei()
         return 10;
-      case "a3b1b31d": // getL1BaseFeeEstimate()
+      case "f5d6ded7": // getL1BaseFeeEstimate()
         return 5;
-      case "c1c1c31d": // getPricesInArbGas()
+      case "02199f34": // getPricesInArbGas()
         return 96;
       default:
         return 0;
