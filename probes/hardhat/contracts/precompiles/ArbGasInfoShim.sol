@@ -2,48 +2,52 @@
 pragma solidity ^0.8.19;
 
 contract ArbGasInfoShim {
-    // sequential storage slots 0..5
-    uint256 private _l2BaseFee;         // slot 0
-    uint256 private _l1BaseFeeEstimate; // slot 1
-    uint256 private _l1CalldataCost;    // slot 2
-    uint256 private _l1StorageCost;     // slot 3
-    uint256 private _congestionFee;     // slot 4
-    uint256 private _aux;               // slot 5 (reserved/aux)
+    //@note \/ getPricesInWei outputs
+    uint256 private _perL2Tx;               // slot 0
+    uint256 private _perL1CalldataFee;      // slot 1
+    uint256 private _perStorageAllocation;  // slot 2
+    uint256 private _perArbGasBase;         // slot 3
+    uint256 private _perArbGasCongestion;   // slot 4
+    uint256 private _perArbGasTotal;        // slot 5
 
-    // Nitro-compatible bundle
+
+    // one-compatible bundle
     function getPricesInWei()
         external
         view
         returns (uint256, uint256, uint256, uint256, uint256, uint256)
     {
         return (
-            _l2BaseFee,
-            _l1BaseFeeEstimate,
-            _l1CalldataCost,
-            _l1StorageCost,
-            _congestionFee,
-            _aux
+            _perL2Tx,
+            _perL1CalldataFee,      
+            _perStorageAllocation,
+            _perArbGasBase,
+            _perArbGasCongestion,
+            _perArbGasTotal
         );
     }
 
+
+
+
     // helpers for tests
     function __seed(uint256[6] calldata v) external {
-        _l2BaseFee = v[0];
-        _l1BaseFeeEstimate = v[1];
-        _l1CalldataCost = v[2];
-        _l1StorageCost = v[3];
-        _congestionFee = v[4];
-        _aux = v[5];
+        _perL2Tx = v[0];
+        _perL1CalldataFee = v[1];
+        _perStorageAllocation = v[2];
+        _perArbGasBase = v[3];
+        _perArbGasCongestion = v[4];
+        _perArbGasTotal = v[5];
     }
 
 
+    //@Deprecated/Legacy
     function getL1BaseFeeEstimate() external view returns (uint256) {
-        return _l1BaseFeeEstimate;
+        return 0;
     }
 
-    // Simple stand-in so the probe passes. Nitro’s real value is contextual;
-    // for local shim, contract return the estimate (slot 1).
+    //@Deprecated/Legacy
     function getCurrentTxL1GasFees() external view returns (uint256) {
-        return _l1BaseFeeEstimate;
+        return 0;
     }
 }
