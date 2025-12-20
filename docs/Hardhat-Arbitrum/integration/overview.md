@@ -105,7 +105,7 @@ This optional file allows you to lock down specific values for your tests.
 }
 ```
 
-The `gas.pricesInWei` tuple order is: `[ l2BaseFee, l1BaseFeeEstimate, l1CalldataCost, l1StorageCost, congestionFee, aux ]`
+The `gas.pricesInWei` tuple order is: `[ perL2Tx, perL1CalldataFee, perStorageAllocation, perArbGasBase, perArbGasCongestion, perArbGasTotal ]`
 
 ---
 

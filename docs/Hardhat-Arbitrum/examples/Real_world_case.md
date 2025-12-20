@@ -24,7 +24,7 @@ Focus: practical use-cases for a Stylus-first local testing environment that exp
 **ArbGasInfo shim tuple order** returned by `getPricesInWei()`:
 
 ```
-[ l2BaseFee, l1BaseFeeEstimate, l1CalldataCost, l1StorageCost, congestionFee, aux ]
+[ perL2Tx, perL1CalldataFee, perStorageAllocation, perArbGasBase, perArbGasCongestion, perArbGasTotal ]
 ```
 
 * `getCurrentTxL1GasFees()` (shim) returns the **estimate** (tuple index 1) for deterministic testing.

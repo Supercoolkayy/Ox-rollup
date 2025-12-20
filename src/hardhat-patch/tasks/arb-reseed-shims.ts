@@ -19,13 +19,7 @@ function loadJsonConfig(hre: HardhatRuntimeEnvironment): any {
   return {};
 }
 
-// Nitro → Shim reorder (Nitro tuple observed: [baseFee,l1Base,l1Calldata,l2Base,congestion,blobBase])
-function nitroToShimTuple(n: string[]) {
-  if (!Array.isArray(n) || n.length !== 6) throw new Error("bad nitro tuple");
-  const l1StorageCost = "0";
-  const [baseFee, l1BaseFeeEstimate, l1CalldataCost, l2BaseFee, congestionFee, blobBaseFee] = n.map(String);
-  return [l2BaseFee, l1BaseFeeEstimate, l1CalldataCost, l1StorageCost, congestionFee, blobBaseFee];
-}
+
 
 async function rpcCall(rpcUrl: string, method: string, params: any[]): Promise<any> {
   const res = await fetch(rpcUrl, {
@@ -128,7 +122,7 @@ task("arb:reseed-shims", "Seed ArbGasInfoShim from Stylus/Nitro RPC or JSON")
     if (!shimTuple && wantNitro && nitroRpc) {
       try {
         const t: any = await fetchPricesTuple(nitroRpc, hre);
-        shimTuple = nitroToShimTuple(t);
+        shimTuple = t.map(String); // Nitro order
         console.log("ℹ️ fetched from Nitro:", t, "→ shim:", shimTuple);
       } catch (e: any) {
         console.log(`⚠️ Nitro RPC fetch failed (${nitroRpc}): ${e?.message ?? e}`);

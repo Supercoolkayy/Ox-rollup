@@ -43,7 +43,7 @@ describe("Golden Test: Local vs Forked Arbitrum RPC", () => {
       // Test local implementation
       const localRegistry =
         hardhatPatch.getRegistry() as HardhatPrecompileRegistry;
-      const localCalldata = new Uint8Array([0xa3, 0xb1, 0xb3, 0x1d]); // arbChainID()
+      const localCalldata = new Uint8Array([0xd1, 0x27, 0xf5, 0x4a]); // arbChainID()
       const localContext = {
         blockNumber: 12345,
         chainId: ARBITRUM_CHAIN_ID,
@@ -85,7 +85,7 @@ describe("Golden Test: Local vs Forked Arbitrum RPC", () => {
       // Test local implementation
       const localRegistry =
         hardhatPatch.getRegistry() as HardhatPrecompileRegistry;
-      const localCalldata = new Uint8Array([0x4d, 0x23, 0x01, 0xcc]); // getL1BaseFeeEstimate()
+      const localCalldata = new Uint8Array([0xf5, 0xd6, 0xde, 0xd7]); // getL1BaseFeeEstimate()
       const localContext = {
         blockNumber: 12345,
         chainId: ARBITRUM_CHAIN_ID,

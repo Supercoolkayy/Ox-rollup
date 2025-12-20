@@ -4,17 +4,17 @@ pragma solidity ^0.8.19;
 /// Minimal interface for the ArbGasInfo precompile (0x...006C).
 interface IArbGasInfo {
     /// Returns six uint256 values (shim order):
-    /// [ l2BaseFee, l1BaseFeeEstimate, l1CalldataCost, l1StorageCost, congestionFee, aux ]
+    /// [ perL2Tx, perL1CalldataFee, perStorageAllocation, perArbGasBase, perArbGasCongestion, perArbGasTotal ]
     function getPricesInWei()
         external
         view
         returns (
-            uint256 l2BaseFee,
-            uint256 l1BaseFeeEstimate,
-            uint256 l1CalldataCost,
-            uint256 l1StorageCost,
-            uint256 congestionFee,
-            uint256 aux
+            uint256 perL2Tx,
+            uint256 perL1CalldataFee,
+            uint256 perStorageAllocation,
+            uint256 perArbGasBase,
+            uint256 perArbGasCongestion,
+            uint256 perArbGasTotal
         );
 
     /// Returns the current L1 fee estimate for the tx (shim returns seeded slot[1]).
@@ -28,12 +28,12 @@ library GasInfoReader {
     IArbGasInfo internal constant GASINFO = IArbGasInfo(ADDR_ARBGASINFO);
 
     function prices() internal view returns (
-        uint256 l2BaseFee,
-        uint256 l1BaseFeeEstimate,
-        uint256 l1CalldataCost,
-        uint256 l1StorageCost,
-        uint256 congestionFee,
-        uint256 aux
+        uint256 perL2Tx,
+        uint256 perL1CalldataFee,
+        uint256 perStorageAllocation,
+        uint256 perArbGasBase,
+        uint256 perArbGasCongestion,
+        uint256 perArbGasTotal
     ) {
         return GASINFO.getPricesInWei();
     }

@@ -8,12 +8,12 @@ describe("@m3 Test C: fallback tuple (no RPC, ignore config)", function () {
 
     // The plugin’s documented fallback (shim order)
     const fallback = [
-      "100000000",     // l2BaseFee
-      "1000000000",    // l1BaseFeeEstimate
-      "2000000000000", // l1CalldataCost
-      "0",             // l1StorageCost
-      "0",             // congestionFee
-      "100000000",     // aux
+      "100000000",     // perL2Tx
+      "1000000000",    // perL1CalldataFee
+      "2000000000000", // perStorageAllocation
+      "0",             // perArbGasBase
+      "0",             // perArbGasCongestion
+      "100000000",     // perArbGasTotal
     ];
 
     await seedTupleSlots(hre, fallback);

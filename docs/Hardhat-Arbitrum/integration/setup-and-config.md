@@ -61,7 +61,7 @@ npm install --save-dev @dappsoverapps.com/hardhat-patch
 | `runtime`          | `"stylus" \| "nitro"`          | `"stylus"` | Stylus-first target.                                                                                                                    |
 | `precompiles.mode` | `"shim" \| "auto" \| "native"` | `"auto"`   | integration uses shim path; `auto` gracefully installs shims.                                                                           |
 | `stylusRpc`        | string                         | *(unset)*  | Remote RPC used by tasks when `--stylus` is selected. Can also be set via `STYLUS_RPC`.                                                 |
-| `gas.pricesInWei`  | string[6]                      | *(unset)*  | **Shim order**: `[l2BaseFee, l1BaseFeeEstimate, l1CalldataCost, l1StorageCost, congestionFee, aux]`. Used when no RPC/ cache is chosen. |
+| `gas.pricesInWei`  | string[6]                      | *(unset)*  | **Shim order**: `[ perL2Tx, perL1CalldataFee, perStorageAllocation, perArbGasBase, perArbGasCongestion, perArbGasTotal ]`. Used when no RPC/ cache is chosen. |
 | `arbSysChainId`    | number                         | `42161`    | Returned by `ArbSysShim` at slot 0.                                                                                                     |
 | `costing.enabled`  | boolean                        | `false`    | If implemented, returns a small, stable non-zero `gasUsed` for precompile calls in shim mode (off by default).                          |
 
@@ -111,7 +111,7 @@ module.exports = {
 * `gas.pricesInWei` is a **6-tuple in shim order**:
 
   ```
-  [ l2BaseFee, l1BaseFeeEstimate, l1CalldataCost, l1StorageCost, congestionFee, aux ]
+  [ perL2Tx, perL1CalldataFee, perStorageAllocation, perArbGasBase, perArbGasCongestion, perArbGasTotal ]
   ```
 
 * When both `stylusRpc` and `gas.pricesInWei` are present, reseeding prioritizes RPC (§3.4).
