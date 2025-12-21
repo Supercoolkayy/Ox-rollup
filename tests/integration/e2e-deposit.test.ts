@@ -110,7 +110,7 @@ describe("E2E Deposit Flow Integration", () => {
       // Test ArbSys precompile directly through the registry
       const registry = hardhatPatch.getRegistry() as HardhatPrecompileRegistry;
 
-      const arbSysCalldata = new Uint8Array([0xa3, 0xb1, 0xb3, 0x1d]); // arbChainID()
+      const arbSysCalldata = new Uint8Array([0xd1, 0x27, 0xf5, 0x4a]); // arbChainID()
       const context = {
         blockNumber: 12345,
         chainId: ARBITRUM_CHAIN_ID,
@@ -140,7 +140,7 @@ describe("E2E Deposit Flow Integration", () => {
       // Test ArbGasInfo precompile directly through the registry
       const registry = hardhatPatch.getRegistry() as HardhatPrecompileRegistry;
 
-      const arbGasInfoCalldata = new Uint8Array([0xa3, 0xb1, 0xb3, 0x1d]); // getL1BaseFeeEstimate()
+      const arbGasInfoCalldata = new Uint8Array([0xf5, 0xd6, 0xde, 0xd7]); // getL1BaseFeeEstimate()
       const context = {
         blockNumber: 12345,
         chainId: ARBITRUM_CHAIN_ID,
@@ -278,7 +278,7 @@ describe("E2E Deposit Flow Integration", () => {
       const registry = hardhatPatch.getRegistry() as HardhatPrecompileRegistry;
 
       // Test ArbSys call
-      const arbSysCalldata = new Uint8Array([0xa3, 0xb1, 0xb3, 0x1d]); // arbChainID()
+      const arbSysCalldata = new Uint8Array([0xd1, 0x27, 0xf5, 0x4a]); // arbChainID()
       const context = {
         blockNumber: 12345,
         chainId: ARBITRUM_CHAIN_ID,

@@ -159,9 +159,9 @@ impl PrecompileHandler for ArbSysHandler {
         let selector_hex = hex::encode(selector);
 
         match selector_hex.as_str() {
-            "a3b1b31d" => self.handle_arb_chain_id(config),           // arbChainID()
-            "051038f2" => self.handle_arb_block_number(config),        // arbBlockNumber()
-            "4d2301cc" => self.handle_arb_os_version(config),         // arbOSVersion()
+            "d127f54a" => self.handle_arb_chain_id(config),           // arbChainID()
+            "a3b1b31d" => self.handle_arb_block_number(config),        // arbBlockNumber()
+            "051038f2" => self.handle_arb_os_version(config),         // arbOSVersion()
             _ => Err(anyhow!("Unknown function selector: 0x{}", selector_hex)),
         }
     }
@@ -225,9 +225,9 @@ impl PrecompileHandler for ArbGasInfoHandler {
         let selector_hex = hex::encode(selector);
 
         match selector_hex.as_str() {
-            "4d2301cc" => self.handle_get_current_tx_l1_gas_fees(input, config), // getCurrentTxL1GasFees()
-            "a3b1b31d" => self.handle_get_prices_in_wei(config),                 // getPricesInWei()
-            "b4d2301cc" => self.handle_get_l1_base_fee_estimate(config),         // getL1BaseFeeEstimate()
+            "c6f7de0e" => self.handle_get_current_tx_l1_gas_fees(input, config), // getCurrentTxL1GasFees()
+            "41b247a8" => self.handle_get_prices_in_wei(config),                 // getPricesInWei()
+            "f5d6ded7" => self.handle_get_l1_base_fee_estimate(config),         // getL1BaseFeeEstimate()
             _ => Err(anyhow!("Unknown function selector: 0x{}", selector_hex)),
         }
     }
@@ -385,13 +385,13 @@ mod tests {
         let config = ArbitrumConfig::new(42161, 20, 20_000_000_000);
 
         // Test arbChainID()
-        let input = hex::decode("a3b1b31d").unwrap();
+        let input = hex::decode("d127f54a").unwrap();
         let result = handler.handle_call(&input, &config).unwrap();
         let chain_id = U256::from_big_endian(&result);
         assert_eq!(chain_id, U256::from_u64(42161));
 
         // Test arbOSVersion()
-        let input = hex::decode("4d2301cc").unwrap();
+        let input = hex::decode("051038f2").unwrap();
         let result = handler.handle_call(&input, &config).unwrap();
         let version = U256::from_big_endian(&result);
         assert_eq!(version, U256::from_u64(20));
@@ -403,7 +403,7 @@ mod tests {
         let config = ArbitrumConfig::new(42161, 20, 20_000_000_000);
 
         // Test getCurrentTxL1GasFees()
-        let input = hex::decode("4d2301cc").unwrap();
+        let input = hex::decode("c6f7de0e").unwrap();
         let result = handler.handle_call(&input, &config).unwrap();
         let base_fee = U256::from_big_endian(&result);
         assert_eq!(base_fee, U256::from_u64(1_280_000_000_000));

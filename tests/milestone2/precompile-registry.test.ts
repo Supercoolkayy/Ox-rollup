@@ -74,7 +74,7 @@ describe("Precompile Registry", () => {
     });
 
     it("should handle ArbSys arbChainID() call", async () => {
-      const calldata = new Uint8Array([0xa3, 0xb1, 0xb3, 0x1d]); // arbChainID() selector
+      const calldata = new Uint8Array([0xd1, 0x27, 0xf5, 0x4a]); // arbChainID() selector
       const context = {
         blockNumber: 12345,
         chainId: 42161,
@@ -95,7 +95,7 @@ describe("Precompile Registry", () => {
     });
 
     it("should handle ArbSys arbBlockNumber() call", async () => {
-      const calldata = new Uint8Array([0x05, 0x10, 0x38, 0xf2]); // arbBlockNumber() selector
+      const calldata = new Uint8Array([0xa3, 0xb1, 0xb3, 0x1d]); // arbBlockNumber() selector
       const context = {
         blockNumber: 12345,
         chainId: 42161,
@@ -116,7 +116,7 @@ describe("Precompile Registry", () => {
     });
 
     it("should handle ArbGasInfo getPricesInWei() call", async () => {
-      const calldata = new Uint8Array([0x4d, 0x23, 0x01, 0xcc]); // getPricesInWei() selector
+      const calldata = new Uint8Array([0x41, 0xb2, 0x47, 0xa8]); // getPricesInWei() selector
       const context = {
         blockNumber: 12345,
         chainId: 42161,
@@ -138,7 +138,7 @@ describe("Precompile Registry", () => {
     });
 
     it("should handle ArbGasInfo getL1BaseFeeEstimate() call", async () => {
-      const calldata = new Uint8Array([0xa3, 0xb1, 0xb3, 0x1d]); // getL1BaseFeeEstimate() selector
+      const calldata = new Uint8Array([0xf5, 0xd6, 0xde, 0xd7]); // getL1BaseFeeEstimate() selector
       const context = {
         blockNumber: 12345,
         chainId: 42161,

@@ -24,7 +24,7 @@ This document covers reseeding the **ArbGasInfo** shim with fee data and validat
 `ArbGasInfoShim.getPricesInWei()` returns a 6-tuple in **shim order**:
 
 ```
-[ l2BaseFee, l1BaseFeeEstimate, l1CalldataCost, l1StorageCost, congestionFee, aux ]
+[ perL2Tx, perL1CalldataFee, perStorageAllocation, perArbGasBase, perArbGasCongestion, perArbGasTotal ]
 ```
 
 * `aux` is a general-purpose slot (commonly used to surface auxiliary fees such as blob base fee during experiments).

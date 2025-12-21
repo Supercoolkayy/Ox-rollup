@@ -69,13 +69,13 @@ export class ArbSysHandler implements PrecompileHandler {
 
     try {
       switch (selectorHex) {
-        case "a3b1b31d": // arbChainID()
+        case "d127f54a": // arbChainID()
           return this.handleArbChainID(ctx);
 
-        case "051038f2": // arbBlockNumber()
+        case "a3b1b31d": // arbBlockNumber()
           return this.handleArbBlockNumber(ctx);
 
-        case "4d2301cc": // arbOSVersion()
+        case "051038f2": // arbOSVersion()
           return this.handleArbOSVersion(ctx);
 
         case "6e8c1d6f": // sendTxToL1(address,bytes)
@@ -117,16 +117,16 @@ export class ArbSysHandler implements PrecompileHandler {
 
     try {
       switch (selectorHex) {
-        case "a3b1b31d": // arbChainID()
+        case "d127f54a": // arbChainID()
           return this.handleArbChainIDLegacy(context);
 
-        case "051038f2": // arbBlockNumber()
+        case "a3b1b31d": // arbBlockNumber()
           return this.handleArbBlockNumberLegacy(context);
 
-        case "4d2301cc": // arbBlockHash(uint256)
+        case "051038f2": // arbBlockHash(uint256)
           return this.handleArbBlockHashLegacy(calldata, context);
 
-        case "4d2301cc": // arbOSVersion()
+        case "051038f2": // arbOSVersion()
           return this.handleArbOSVersionLegacy(context);
 
         case "6e8c1d6f": // sendTxToL1(address,bytes)
@@ -173,9 +173,9 @@ export class ArbSysHandler implements PrecompileHandler {
       .join("");
 
     switch (selector) {
-      case "a3b1b31d": // arbChainID()
-      case "051038f2": // arbBlockNumber()
-      case "4d2301cc": // arbOSVersion()
+      case "d127f54a": // arbChainID()
+      case "a3b1b31d": // arbBlockNumber()
+      case "051038f2": // arbOSVersion()
         return 3;
       case "6e8c1d6f": // sendTxToL1()
         return 100;

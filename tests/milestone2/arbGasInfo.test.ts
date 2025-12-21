@@ -39,7 +39,7 @@ describe("ArbGasInfo Precompile Handler", () => {
 
   describe("Basic ArbGasInfo Methods", () => {
     it("should handle getPricesInWei() correctly", async () => {
-      const calldata = new Uint8Array([0x4d, 0x23, 0x01, 0xcc]); // getPricesInWei() selector
+      const calldata = new Uint8Array([0x41, 0xb2, 0x47, 0xa8]); // getPricesInWei() selector
       const context = {
         blockNumber: 12345,
         chainId: 42161,
@@ -68,7 +68,7 @@ describe("ArbGasInfo Precompile Handler", () => {
     });
 
     it("should handle getL1BaseFeeEstimate() correctly", async () => {
-      const calldata = new Uint8Array([0xa3, 0xb1, 0xb3, 0x1d]); // getL1BaseFeeEstimate() selector
+      const calldata = new Uint8Array([0xf5, 0xd6, 0xde, 0xd7]); // getL1BaseFeeEstimate() selector
       const context = {
         blockNumber: 12345,
         chainId: 42161,
@@ -93,7 +93,7 @@ describe("ArbGasInfo Precompile Handler", () => {
     });
 
     it("should handle getCurrentTxL1GasFees() correctly", async () => {
-      const calldata = new Uint8Array([0xb1, 0xb1, 0xb3, 0x1d]); // getCurrentTxL1GasFees() selector
+      const calldata = new Uint8Array([0xc6, 0xf7, 0xde, 0x0e]); // getCurrentTxL1GasFees() selector
       const context = {
         blockNumber: 12345,
         chainId: 42161,
@@ -120,7 +120,7 @@ describe("ArbGasInfo Precompile Handler", () => {
     });
 
     it("should handle getPricesInArbGas() correctly", async () => {
-      const calldata = new Uint8Array([0xc1, 0xc1, 0xc3, 0x1d]); // getPricesInArbGas() selector
+      const calldata = new Uint8Array([0x02, 0x19, 0x9f, 0x34]); // getPricesInArbGas() selector
       const context = {
         blockNumber: 12345,
         chainId: 42161,
@@ -310,7 +310,7 @@ describe("ArbGasInfo Precompile Handler", () => {
     it("should handle calls through the patch registry", async () => {
       const registry = patch.getRegistry() as HardhatPrecompileRegistry;
 
-      const calldata = new Uint8Array([0x4d, 0x23, 0x01, 0xcc]); // getPricesInWei()
+      const calldata = new Uint8Array([0x41, 0xb2, 0x47, 0xa8]); // getPricesInWei()
       const context = {
         blockNumber: 12345,
         chainId: 42161,

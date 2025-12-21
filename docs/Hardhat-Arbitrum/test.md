@@ -26,7 +26,7 @@ This document records the automated tests executed for Milestone 3’s  shim wor
 * `ArbGasInfo` — `0x000000000000000000000000000000000000006c`
 
 **Shim tuple order (storage and assertions)**
-`[ l2BaseFee, l1BaseFeeEstimate, l1CalldataCost, l1StorageCost, congestionFee, aux ]`
+`[ perL2Tx, perL1CalldataFee, perStorageAllocation, perArbGasBase, perArbGasCongestion, perArbGasTotal ]`
 
 ---
 
@@ -128,7 +128,7 @@ This document records the automated tests executed for Milestone 3’s  shim wor
 | -------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | Stylus test remains pending                  | `STYLUS_RPC` not exported                    | Provide a valid endpoint for a live run, or accept pending status for offline determinism.             |
 | RPC fetch intermittently fails on some hosts | HTTP/2 or DNS behavior in runner environment | Set `NODE_OPTIONS=--dns-result-order=ipv4first` and `NODE_NO_HTTP2=1` before running tests.            |
-| Tuple mismatch in Test A                     | JSON tuple not in shim order                 | Ensure 6-tuple is `[l2BaseFee, l1BaseFeeEstimate, l1CalldataCost, l1StorageCost, congestionFee, aux]`. |
+| Tuple mismatch in Test A                     | JSON tuple not in shim order                 | Ensure 6-tuple is `[perL2Tx, l1BaseFeeEstimate, l1CalldataCost, l1StorageCost, congestionFee, aux]`. |
 | Tuple mismatch in Test C                     | Local modifications to fallback constants    | Restore documented fallback values before re-running.                                                  |
 
 ---
