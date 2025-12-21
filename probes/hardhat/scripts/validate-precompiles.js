@@ -59,7 +59,7 @@ async function main() {
 
   // Test ArbGasInfo getL1BaseFeeEstimate
   console.log("\n⛽ Testing ArbGasInfo getL1BaseFeeEstimate...");
-  const arbGasInfoCalldata = new Uint8Array([0x4d, 0x23, 0x01, 0xcc]); // getL1BaseFeeEstimate()
+  const arbGasInfoCalldata = new Uint8Array([0xf5, 0xd6, 0xde, 0xd7]); // getL1BaseFeeEstimate()
 
   const arbGasInfoResult = await registry.handleCall(
     "0x000000000000000000000000000000000000006c", // ArbGasInfo address
