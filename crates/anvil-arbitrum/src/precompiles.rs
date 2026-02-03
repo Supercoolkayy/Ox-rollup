@@ -252,28 +252,41 @@ impl ArbGasInfoHandler {
 
     /// Handle getPricesInWei() call
     fn handle_get_prices_in_wei(&self, config: &ArbitrumConfig) -> Result<Vec<u8>> {
-        // Return 5-tuple: (l2BaseFee, l1CalldataCost, l1StorageCost, baseL2GasPrice, congestionFee)
+        // Return 6-tuple: (Stub, Stub, L1BytePrice, L2BaseFee, Congestion, TotalL2)
         let mut result = Vec::new();
 
-        // L2 base fee (32 bytes)
-        let l2_base_fee = U256::from_u64(config.gas_price_components.l2_base_fee);
-        result.extend_from_slice(&l2_base_fee.to_big_endian());
+        // [0] Stub (Legacy L2 Tx) - Always 0
+        result.extend_from_slice(&[0u8; 32]);
 
-        // L1 calldata cost (32 bytes)
+        // [1] Stub (Legacy L1 Calldata) - Always 0
+        result.extend_from_slice(&[0u8; 32]);
+
+        // [2] L1 Cost Per Byte (Calculated: L1BaseFee * 16)
+        let l1_base_fee = U256::from_u64(config.l1_base_fee);
         let l1_calldata_cost = U256::from_u64(config.gas_price_components.l1_calldata_cost);
-        result.extend_from_slice(&l1_calldata_cost.to_big_endian());
+        let l1_byte_price = l1_base_fee.saturating_mul(l1_calldata_cost);
+        
+        let mut l1_byte_price_bytes = [0u8; 32];
+        l1_byte_price.to_big_endian(&mut l1_byte_price_bytes);
+        result.extend_from_slice(&l1_byte_price_bytes);
 
-        // L1 storage cost (32 bytes)
-        let l1_storage_cost = U256::from_u64(config.gas_price_components.l1_storage_cost);
-        result.extend_from_slice(&l1_storage_cost.to_big_endian());
+        // [3] L2 Base Fee
+        let l2_base_fee = U256::from_u64(config.gas_price_components.l2_base_fee);
+        let mut l2_base_fee_bytes = [0u8; 32];
+        l2_base_fee.to_big_endian(&mut l2_base_fee_bytes);
+        result.extend_from_slice(&l2_base_fee_bytes);
 
-        // Base L2 gas price (32 bytes)
-        let base_l2_gas_price = U256::from_u64(config.gas_price_components.l2_base_fee);
-        result.extend_from_slice(&base_l2_gas_price.to_big_endian());
-
-        // Congestion fee (32 bytes)
+        // [4] Congestion Fee
         let congestion_fee = U256::from_u64(config.gas_price_components.congestion_fee);
-        result.extend_from_slice(&congestion_fee.to_big_endian());
+        let mut congestion_fee_bytes = [0u8; 32];
+        congestion_fee.to_big_endian(&mut congestion_fee_bytes);
+        result.extend_from_slice(&congestion_fee_bytes);
+
+        // [5] Total L2 Fee (L2Base + Congestion)
+        let total_l2 = l2_base_fee.saturating_add(congestion_fee);
+        let mut total_l2_bytes = [0u8; 32];
+        total_l2.to_big_endian(&mut total_l2_bytes);
+        result.extend_from_slice(&total_l2_bytes);
 
         Ok(result)
     }
