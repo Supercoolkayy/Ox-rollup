@@ -246,63 +246,46 @@ export class ArbGasInfoHandler implements PrecompileHandler {
   }
 
   /**
-   * Get gas prices in wei (5-tuple)
-   * Returns: (l2BaseFee, l1CalldataCost, l1StorageCost, baseL2GasPrice, congestionFee)
+   * Get gas prices in wei (6-tuple)
+   * Returns: (
+                per L2 tx,
+                per L1 calldata byte
+                per storage allocation,
+                per ArbGas base,
+                per ArbGas congestion,
+                per ArbGas total
+            )
    */
   private handleGetPricesInWei(ctx: PrecompileContext): Uint8Array {
-    const data = new Uint8Array(160); // 5 * 32 bytes
-    const view = new DataView(data.buffer);
+    // Configurable Logic: Calculate prices based on current config state
+    const l1BytePrice = this.config.l1BaseFee * this.config.gasPriceComponents.l1CalldataCost;
+    const l2BaseFee = this.config.gasPriceComponents.l2BaseFee;
+    const congestion = this.config.gasPriceComponents.congestionFee;
+    const totalL2 = l2BaseFee + congestion;
 
-    let offset = 0;
+    // The Data Structure is a 6-tuple of uint256 values
+    // Map the values to the indices observed on Mainnet
+    const payload = [
+      BigInt(0),       // [0] Stub
+      BigInt(0),       // [1] Stub
+      l1BytePrice,     // [2] L1 Cost Per Byte (ACTIVE)
+      l2BaseFee,       // [3] L2 Base Fee (ACTIVE)
+      congestion,      // [4] Congestion (ACTIVE)
+      totalL2          // [5] Total (ACTIVE)
+    ];
 
-    // L2 base fee
-    view.setBigUint64(
-      offset + 24,
-      this.config.gasPriceComponents.l2BaseFee,
-      false
-    );
-    offset += 32;
-
-    // L1 calldata cost per byte
-    view.setBigUint64(
-      offset + 24,
-      this.config.gasPriceComponents.l1CalldataCost,
-      false
-    );
-    offset += 32;
-
-    // L1 storage cost (always 0 in Nitro)
-    view.setBigUint64(
-      offset + 24,
-      this.config.gasPriceComponents.l1StorageCost,
-      false
-    );
-    offset += 32;
-
-    // Base L2 gas price (same as L2 base fee)
-    view.setBigUint64(
-      offset + 24,
-      this.config.gasPriceComponents.l2BaseFee,
-      false
-    );
-    offset += 32;
-
-    // Congestion fee
-    view.setBigUint64(
-      offset + 24,
-      this.config.gasPriceComponents.congestionFee,
-      false
-    );
-
-    return data;
+    // 
+    return this.packUint256Array(payload);
   }
+
 
   /**
    * Get L1 base fee estimate
    */
   private handleGetL1BaseFeeEstimate(ctx: PrecompileContext): Uint8Array {
-    return this.encodeUint256(Number(this.config.l1BaseFee));
-  }
+  // Nitro Mainnet returns 0 here; pricing is handled via getPricesInWei index [2]
+  return this.packUint256Array([BigInt(0)]);
+}
 
   /**
    * Get current transaction L1 gas fees
@@ -321,36 +304,14 @@ export class ArbGasInfoHandler implements PrecompileHandler {
    * Returns: (l2BaseFee, l1CalldataCost, l1StorageCost)
    */
   private handleGetPricesInArbGas(ctx: PrecompileContext): Uint8Array {
-    const data = new Uint8Array(96); // 3 * 32 bytes
-    const view = new DataView(data.buffer);
-
-    let offset = 0;
-
-    // L2 base fee
-    view.setBigUint64(
-      offset + 24,
-      this.config.gasPriceComponents.l2BaseFee,
-      false
-    );
-    offset += 32;
-
-    // L1 calldata cost per byte
-    view.setBigUint64(
-      offset + 24,
-      this.config.gasPriceComponents.l1CalldataCost,
-      false
-    );
-    offset += 32;
-
-    // L1 storage cost (always 0 in Nitro)
-    view.setBigUint64(
-      offset + 24,
-      this.config.gasPriceComponents.l1StorageCost,
-      false
-    );
-
-    return data;
-  }
+    const payload = [
+      BigInt(0),
+      BigInt(0),
+      BigInt(20000) // Legacy storage buffer stub
+    ];
+    return this.packUint256Array(payload);
+}
+  
 
   // Legacy handlers for backward compatibility
   private handleGetPricesInWeiLegacy(
@@ -412,6 +373,28 @@ export class ArbGasInfoHandler implements PrecompileHandler {
       data,
       gasUsed: 8,
     };
+  }
+
+  
+  private packUint256Array(values: bigint[]): Uint8Array {
+    // Create buffer: number of items * 32 bytes each
+    const buffer = new Uint8Array(values.length * 32);
+    const view = new DataView(buffer.buffer);
+
+    values.forEach((val, index) => {
+      // Write 32-byte word (EVM standard is Big Endian, but DataView is explicit)
+      // We write the lower 64 bits to the end of the 32-byte slot (Little Endian offset +24)
+      const low = val & BigInt("0xFFFFFFFFFFFFFFFF");
+      view.setBigUint64((index * 32) + 24, low, false); 
+      
+      // Handle bits 64-128 if you expect massive values
+      const mid = (val >> BigInt(64)) & BigInt("0xFFFFFFFFFFFFFFFF");
+      if (mid > 0) {
+          view.setBigUint64((index * 32) + 16, mid, false);
+      }
+    });
+
+    return buffer;
   }
 
   /**
