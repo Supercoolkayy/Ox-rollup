@@ -258,6 +258,8 @@ export class ArbGasInfoHandler implements PrecompileHandler {
    */
   private handleGetPricesInWei(ctx: PrecompileContext): Uint8Array {
     // Configurable Logic: Calculate prices based on current config state
+
+    const l1CalldataCost = this.config.gasPriceComponents.l1CalldataCost;
     const l1BytePrice = this.config.l1BaseFee * this.config.gasPriceComponents.l1CalldataCost;
     const l2BaseFee = this.config.gasPriceComponents.l2BaseFee;
     const congestion = this.config.gasPriceComponents.congestionFee;
@@ -266,8 +268,8 @@ export class ArbGasInfoHandler implements PrecompileHandler {
     // The Data Structure is a 6-tuple of uint256 values
     // Map the values to the indices observed on Mainnet
     const payload = [
-      BigInt(0),       // [0] Stub
-      BigInt(0),       // [1] Stub
+      l2BaseFee,       // [0] Stub
+      l1CalldataCost,  // [1] Stub
       l1BytePrice,     // [2] L1 Cost Per Byte (ACTIVE)
       l2BaseFee,       // [3] L2 Base Fee (ACTIVE)
       congestion,      // [4] Congestion (ACTIVE)
