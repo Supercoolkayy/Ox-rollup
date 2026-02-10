@@ -3,22 +3,33 @@ pragma solidity ^0.8.19;
 
 /**
  * @title ArbGasInfoShim
- * @notice Mock implementation of the ArbGasInfo precompile (0x6C) for local development and testing.
- * @dev Implements the interface used by Arbitrum Nitro (ArbOS v50+), including gas accounting, 
+ * @notice Simulation of the Arbitrum ArbGasInfo precompile at 0x000000000000000000000000000000000000006c
+ * @dev Implements the interface used by Arbitrum Nitro (ArbOS v50+), including gas accounting,
  * pricing constraints, and legacy support.
  */
 contract ArbGasInfoShim {
     // -------------------------------------------------------------------------
-    // Storage
+    // Storage: Legacy & ArbGas Pricing
     // -------------------------------------------------------------------------
 
     // Legacy gas pricing slots (maintained for backward compatibility)
-    uint256 private _perL2Tx;               // Slot 0
-    uint256 private _perL1CalldataFee;      // Slot 1
-    uint256 private _perStorageAllocation;  // Slot 2 (Mapped to L1 Cost Per Byte in Nitro)
-    uint256 private _perArbGasBase;         // Slot 3 (Mapped to L2 Base Fee in Nitro)
-    uint256 private _perArbGasCongestion;   // Slot 4 (Mapped to Congestion Fee in Nitro)
-    uint256 private _perArbGasTotal;        // Slot 5 (Mapped to Total L2 Fee in Nitro)
+    uint256 private _perL2Tx;           // Slot 0
+    uint256 private _perL1CalldataFee;  // Slot 1
+    uint256 private _perStorageAllocation; // Slot 2
+    uint256 private _perArbGasBase;     // Slot 3
+    uint256 private _perArbGasCongestion; // Slot 4
+    uint256 private _perArbGasTotal;    // Slot 5
+
+    // ArbGas pricing slots (defaults match Arbitrum One mainnet)
+    uint256 private _arbGasPerL2Tx = 91;
+    uint256 private _arbGasPerL1Call = 0;
+    uint256 private _arbGasPerStorage = 20000;
+
+    uint256 private _currentTxL1GasFees;
+
+    // -------------------------------------------------------------------------
+    // Storage: Nitro Configuration
+    // -------------------------------------------------------------------------
 
     // Nitro-specific pricing and accounting
     uint256 private _l1BaseFeeEstimate;
@@ -31,8 +42,8 @@ contract ArbGasInfoShim {
     uint256 private _maxTxGasLimit;
     
     // Nitro pricing constraints (Token Bucket algorithm parameters)
-    // Structure: [target, window, backlog]
-    uint64[3][] private _pricingConstraints;
+    struct Constraint { uint64 t; uint64 w; uint64 b; }
+    Constraint[] private _pricingConstraints;
 
     // -------------------------------------------------------------------------
     // Core Interface
@@ -69,16 +80,38 @@ contract ArbGasInfoShim {
     }
 
     /**
-     * @notice Get the L1 base fee estimate.
+     * @notice Get gas prices in ArbGas.
+     * @return (perL2Tx, perL1CalldataFee, perStorageAllocation)
      */
+    function getPricesInArbGas() public view returns (uint256, uint256, uint256) {
+        return (_arbGasPerL2Tx, _arbGasPerL1Call, _arbGasPerStorage);
+    }
+
+    /**
+     * @notice Wrapper for getPricesInArbGas that ignores the aggregator argument.
+     */
+    function getPricesInArbGasWithAggregator(address) 
+        external 
+        view 
+        returns (uint256, uint256, uint256) 
+    {
+        return getPricesInArbGas();
+    }
+
+
+    function getCurrentTxL1GasFees() external view returns (uint256) { 
+        return _currentTxL1GasFees; 
+    }
+
+
+    // -------------------------------------------------------------------------
+    // Nitro Interface
+    // -------------------------------------------------------------------------
+
     function getL1BaseFeeEstimate() external view returns (uint256) {
         return _l1BaseFeeEstimate;
     }
 
-    /**
-     * @notice Get the gas accounting parameters.
-     * @return (speedLimitPerSecond, gasPoolMax, maxBlockGasLimit)
-     */
     function getGasAccountingParams() 
         external 
         view 
@@ -87,63 +120,34 @@ contract ArbGasInfoShim {
         return (_speedLimitPerSecond, _gasPoolMax, _maxBlockGasLimit);
     }
 
-    /**
-     * @notice Get the gas pricing constraints used by the multi-constraint pricing model.
-     */
     function getGasPricingConstraints() 
         external 
         view 
-        returns (uint64[3][] memory) 
+        returns (Constraint[] memory) 
     {
         return _pricingConstraints;
     }
 
-    /**
-     * @notice Get the minimum gas price needed for a transaction to succeed.
-     */
     function getMinimumGasPrice() external view returns (uint256) {
         return _minimumGasPrice;
     }
     
-    /**
-     * @notice Get the maximum gas limit per transaction.
-     */
     function getMaxTxGasLimit() external view returns (uint256) {
         return _maxTxGasLimit;
     }
 
-    /**
-     * @notice Get the maximum gas limit per block.
-     */
     function getMaxBlockGasLimit() external view returns (uint64) {
         return uint64(_maxBlockGasLimit);
     }
 
-    /**
-     * @notice Legacy method returning fixed stub values.
-     * @return (0, 0, 20000)
-     */
-    function getPricesInArbGas() public pure returns (uint256, uint256, uint256) {
-        return (0, 0, 20000);
-    }
-
-    /**
-     * @notice Legacy wrapper for getPricesInArbGas.
-     */
-    function getPricesInArbGasWithAggregator(address) 
-        external 
-        pure 
-        returns (uint256, uint256, uint256) 
-    {
-        return getPricesInArbGas();
-    }
+    
 
     // -------------------------------------------------------------------------
-    // Test Configuration (Seeding)
+    // Configuration & Seeding (Shim-Specific)
     // -------------------------------------------------------------------------
 
     /**
-     * @notice Configures the standard pricing slots.
+     * @notice Configures the standard pricing slots (Legacy Wei).
      * @param v Array of 6 uint256 values corresponding to the return values of getPricesInWei.
      */
     function __seed(uint256[6] calldata v) external {
@@ -156,12 +160,16 @@ contract ArbGasInfoShim {
     }
 
     /**
+     * @notice Configures the ArbGas pricing slots.
+     */
+    function __seedArbGasTuple(uint256 l2Tx, uint256 l1Call, uint256 storageGas) external {
+        _arbGasPerL2Tx = l2Tx;
+        _arbGasPerL1Call = l1Call;
+        _arbGasPerStorage = storageGas;
+    }
+
+    /**
      * @notice Configures Nitro-specific accounting and pricing parameters.
-     * @param l1BaseFeeEst The L1 base fee estimate.
-     * @param speedLimit The L2 speed limit per second.
-     * @param maxBlockGas The maximum gas allowed per block.
-     * @param maxTxGas The maximum gas allowed per transaction.
-     * @param minGasPrice The minimum gas price.
      */
     function __seedNitroConfig(
         uint256 l1BaseFeeEst,
@@ -175,13 +183,20 @@ contract ArbGasInfoShim {
         _maxBlockGasLimit = maxBlockGas;
         _maxTxGasLimit = maxTxGas;
         _minimumGasPrice = minGasPrice;
+        _gasPoolMax = maxBlockGas;
     }
 
+
+    function __seedCurrentTxL1GasFees(uint256 value) external {
+        _currentTxL1GasFees = value;
+    }
+
+    
     /**
      * @notice Adds a pricing constraint to the constraints array.
      */
     function __pushPricingConstraint(uint64 target, uint64 window, uint64 backlog) external {
-        _pricingConstraints.push([target, window, backlog]);
+        _pricingConstraints.push(Constraint(target, window, backlog));
     }
     
     /**
@@ -194,10 +209,10 @@ contract ArbGasInfoShim {
     // -------------------------------------------------------------------------
     // Stubs (Interface Compliance)
     // -------------------------------------------------------------------------
-    // The following methods return default zero values to ensure full interface 
-    // compliance and prevent transaction reverts on standard method calls.
+    // These methods return zero values to ensure interface compliance and
+    // prevent reverts on standard calls that are not simulated by this shim.
 
-    function getCurrentTxL1GasFees() external view returns (uint256) { return 0; }
+
     function getL1RewardRate() external view returns (uint64) { return 0; }
     function getL1RewardRecipient() external view returns (address) { return address(0); }
     function getGasBacklog() external view returns (uint64) { return 0; }

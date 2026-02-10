@@ -307,9 +307,9 @@ export class ArbGasInfoHandler implements PrecompileHandler {
    */
   private handleGetPricesInArbGas(ctx: PrecompileContext): Uint8Array {
     const payload = [
-      BigInt(0),
-      BigInt(0),
-      BigInt(20000) // Legacy storage buffer stub
+      this.config.gasPriceComponents.l2BaseFee,
+      this.config.gasPriceComponents.l1CalldataCost,
+      this.config.gasPriceComponents.l1StorageCost,
     ];
     return this.packUint256Array(payload);
 }

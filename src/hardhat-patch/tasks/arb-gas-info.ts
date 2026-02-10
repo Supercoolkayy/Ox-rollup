@@ -6,8 +6,9 @@ const ADDR_GASINFO = "0x000000000000000000000000000000000000006c" as const;
 // --- Types ---
 
 type Six = [string, string, string, string, string, string];
+type Three = [string, string, string]; // Bucket D
 
-// Names for the 6-tuple indices based on ArbGasInfo.sol
+// Names for the 6-tuple indices (Legacy Wei)
 const LEGACY_NAMES = [
   "Per L2 Tx (Stub)",       // [0]
   "Per L1 Calldata (Stub)", // [1]
@@ -15,6 +16,13 @@ const LEGACY_NAMES = [
   "Per ArbGas Base",        // [3]
   "Per ArbGas Congestion",  // [4]
   "Per ArbGas Total"        // [5]
+];
+
+// Names for the 3-tuple indices (ArbGas)
+const ARBGAS_NAMES = [
+  "ArbGas Per L2 Tx",       // [0]
+  "ArbGas Per L1 Call",     // [1]
+  "ArbGas Per Storage"      // [2]
 ];
 
 interface NitroScalars {
@@ -34,6 +42,7 @@ interface NitroConstraint {
 
 interface GasInfoState {
   legacy: Six | null;
+  arbGas: Three | null; 
   scalars: NitroScalars | null;
   constraints: NitroConstraint[] | null;
 }
@@ -54,17 +63,27 @@ function pad(str: string, len: number) {
 
 function printRow(name: string, local: string, remote: string, isDiff: boolean) {
   const status = isDiff ? `${fmt.red}DIFF${fmt.reset}` : `${fmt.green}OK${fmt.reset}`;
-  const localVal = isDiff ? `${fmt.red}${pad(local, 20)}${fmt.reset}` : pad(local, 20);
-  const remoteVal = isDiff ? `${fmt.red}${pad(remote, 20)}${fmt.reset}` : pad(remote, 20);
   
-  console.log(` ${pad(name, 25)} | ${localVal} | ${remoteVal} | ${status}`);
+
+  let locDisp = local.length > 18 ? local.substring(0, 15) + "..." : local;
+  let remDisp = remote.length > 18 ? remote.substring(0, 15) + "..." : remote;
+
+  if (isDiff) {
+      locDisp = `${fmt.red}${pad(locDisp, 20)}${fmt.reset}`;
+      remDisp = `${fmt.red}${pad(remDisp, 20)}${fmt.reset}`;
+  } else {
+      locDisp = pad(locDisp, 20);
+      remDisp = pad(remDisp, 20);
+  }
+  
+  console.log(` ${pad(name, 25)} | ${locDisp} | ${remDisp} | ${status}`);
 }
 
 function printDivider() {
   console.log(`${fmt.dim} --------------------------+----------------------+----------------------+------${fmt.reset}`);
 }
 
-// --- Fetch Logic  ---
+// --- Fetch Logic ---
 
 function asStrings(tuple: any): string[] {
   return Array.from(tuple).map((x: any) => x.toString());
@@ -91,6 +110,7 @@ async function fetchFullState(hre: HardhatRuntimeEnvironment, rpcUrlOrProvider: 
 
   const iface = new (hre as any).ethers.Interface([
     "function getPricesInWei() view returns (uint256,uint256,uint256,uint256,uint256,uint256)",
+    "function getPricesInArbGas() view returns (uint256,uint256,uint256)", // Added
     "function getL1BaseFeeEstimate() view returns (uint256)",
     "function getGasAccountingParams() view returns (uint256, uint256, uint256)",
     "function getMinimumGasPrice() view returns (uint256)",
@@ -98,13 +118,21 @@ async function fetchFullState(hre: HardhatRuntimeEnvironment, rpcUrlOrProvider: 
     "function getGasPricingConstraints() view returns (tuple(uint64, uint64, uint64)[])"
   ]);
 
-  const state: GasInfoState = { legacy: null, scalars: null, constraints: null };
+  const state: GasInfoState = { legacy: null, arbGas: null, scalars: null, constraints: null };
 
+  // 1 Fetch Legacy Wei
   try {
     const raw = await doCall(iface.encodeFunctionData("getPricesInWei", []));
     state.legacy = asStrings(iface.decodeFunctionResult("getPricesInWei", raw)) as Six;
   } catch {}
 
+  // 2 Fetch ArbGas (Bucket D)
+  try {
+    const raw = await doCall(iface.encodeFunctionData("getPricesInArbGas", []));
+    state.arbGas = asStrings(iface.decodeFunctionResult("getPricesInArbGas", raw)) as Three;
+  } catch {}
+
+  // 3 Fetch Scalars
   try {
     const [rawL1, rawMin, rawAcc] = await Promise.all([
        doCall(iface.encodeFunctionData("getL1BaseFeeEstimate", [])),
@@ -135,6 +163,7 @@ async function fetchFullState(hre: HardhatRuntimeEnvironment, rpcUrlOrProvider: 
     };
   } catch {}
 
+  // 4 Fetch Constraints
   try {
     const raw = await doCall(iface.encodeFunctionData("getGasPricingConstraints", []));
     const decoded = iface.decodeFunctionResult("getGasPricingConstraints", raw);
@@ -159,11 +188,11 @@ task("arb:gas-info", "Compare local ArbGasInfo tuple with a remote RPC")
   .addFlag("json", "Print machine-readable JSON")
   .setAction(async (args, hre) => {
     
-    // 1. Fetch Local
+    // 1 Fetch Local
     const provider = (hre as any).ethers.provider;
     const localState = await fetchFullState(hre, provider);
 
-    // 2. Resolve Remote
+    // 2 Resolve Remote
     let remoteRpc: string | null = (args.rpc as string) || null;
     if (!remoteRpc) {
       if (args.stylus) remoteRpc = process.env.STYLUS_RPC || ((hre.config as any).arbitrum?.stylusRpc) || null;
@@ -176,23 +205,23 @@ task("arb:gas-info", "Compare local ArbGasInfo tuple with a remote RPC")
       }
     }
 
-    // 3. Fetch Remote
-    let remoteState: GasInfoState = { legacy: null, scalars: null, constraints: null };
+    // 3 Fetch Remote
+    let remoteState: GasInfoState = { legacy: null, arbGas: null, scalars: null, constraints: null };
     if (remoteRpc) {
       try {
         remoteState = await fetchFullState(hre, remoteRpc);
       } catch (e: any) {
-        console.error(`${fmt.red}Error fetching remote:${fmt.reset} ${e.message}`);
+        if (!args.json) console.error(`${fmt.red}Error fetching remote:${fmt.reset} ${e.message}`);
       }
     }
 
-    // 4. JSON Mode (Exit Early)
+    // 4 JSON Mode (Exit Early)
     if (args.json) {
       console.log(JSON.stringify({ local: localState, remote: remoteState, rpc: remoteRpc }, null, 2));
       return;
     }
 
-    // 5. Render CLI Table
+    // 5 Render CLI Table
     console.log(`\n${fmt.bold}Arbitrum Precompile State Comparison${fmt.reset}`);
     console.log(`${fmt.dim}Remote RPC: ${remoteRpc ?? "None"}${fmt.reset}\n`);
 
@@ -206,13 +235,22 @@ task("arb:gas-info", "Compare local ArbGasInfo tuple with a remote RPC")
         const rem = remoteState.legacy ? remoteState.legacy[i] : "-";
         printRow(LEGACY_NAMES[i], val, rem, val !== rem && !!remoteRpc);
       });
+    }
+
+    // SECTION: ARBGAS PRICES 
+    printDivider();
+    if (localState.arbGas) {
+      localState.arbGas.forEach((val, i) => {
+        const rem = remoteState.arbGas ? remoteState.arbGas[i] : "-";
+        printRow(ARBGAS_NAMES[i], val, rem, val !== rem && !!remoteRpc);
+      });
     } else {
-        console.log(` ${fmt.red}Local Legacy Data Not Available${fmt.reset}`);
+        console.log(` ${fmt.red}Local ArbGas Data Not Available (Shim out of date?)${fmt.reset}`);
     }
 
     // SECTION: NITRO SCALARS
+    printDivider();
     if (localState.scalars) {
-      printDivider();
       const keys: (keyof NitroScalars)[] = [
         "l1BaseFeeEstimate", "minimumGasPrice", "speedLimitPerSecond", 
         "gasPoolMax", "maxBlockGasLimit", "maxTxGasLimit"
@@ -239,5 +277,5 @@ task("arb:gas-info", "Compare local ArbGasInfo tuple with a remote RPC")
             console.log(`  [${i}] Target: ${c.targetPerSecond}, Window: ${c.adjustmentWindow}, Backlog: ${c.backlog}`);
         });
     }
-    console.log(""); // newline
+    console.log(""); 
   });

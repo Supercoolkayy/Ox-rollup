@@ -4,6 +4,8 @@
   
   "gas": {
     "pricesInWei": ["69440","1","2000000000000","100000000","0","1"],
+    
+    "pricesInArbGas": ["91", "0", "20000"],
 
     "nitro": {
       "l1BaseFeeEstimate": "0",
