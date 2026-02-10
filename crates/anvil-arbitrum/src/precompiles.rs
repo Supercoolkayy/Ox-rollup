@@ -4,7 +4,7 @@ use crate::arbitrum::ArbitrumConfig;
 use anyhow::{anyhow, Result};
 
 /// Simple address type (20 bytes)
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Address([u8; 20]);
 
 impl Address {
@@ -57,7 +57,7 @@ impl std::str::FromStr for Address {
 }
 
 /// Simple U256 type
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct U256([u8; 32]);
 
 impl U256 {
@@ -85,7 +85,88 @@ impl U256 {
     pub fn zero() -> Self {
         Self([0u8; 32])
     }
+
+    fn max_value() -> Self {
+        Self([0xff; 32])
+    }
+
+    // --- Math Implementations ---
+
+    pub fn saturating_add(&self, other: Self) -> Self {
+        let (res, overflow) = self.overflowing_add(other);
+        if overflow {
+            Self::max_value()
+        } else {
+            res
+        }
+    }
+
+    pub fn saturating_mul(&self, other: Self) -> Self {
+        let a_limbs = self.to_u64_limbs();
+        let b_limbs = other.to_u64_limbs();
+
+        // 4x4 limb multiplication
+        let mut res_limbs = [0u64; 8];
+
+        for i in 0..4 {
+            let mut carry = 0u64;
+            for j in 0..4 {
+                let product = (a_limbs[i] as u128) * (b_limbs[j] as u128);
+                let sum = (res_limbs[i + j] as u128) + product + (carry as u128);
+                
+                res_limbs[i + j] = sum as u64; // Low part
+                carry = (sum >> 64) as u64;    // High part
+            }
+            res_limbs[i + 4] += carry;
+        }
+
+
+        if res_limbs[4..8].iter().any(|&x| x != 0) {
+            return Self::max_value();
+        }
+
+        Self::from_u64_limbs(&res_limbs[0..4])
+    }
+
+    // --- Internal Helpers ---
+
+    fn overflowing_add(&self, other: Self) -> (Self, bool) {
+        let mut result = [0u8; 32];
+        let mut carry = 0u16;
+
+        for i in (0..32).rev() {
+            let sum = (self.0[i] as u16) + (other.0[i] as u16) + carry;
+            result[i] = (sum & 0xff) as u8;
+            carry = sum >> 8;
+        }
+
+        (Self(result), carry > 0)
+    }
+
+    fn to_u64_limbs(&self) -> [u64; 4] {
+        let mut limbs = [0u64; 4];
+        for i in 0..4 {
+            let start = 24 - (i * 8);
+            let end = 32 - (i * 8);
+            let mut chunk = [0u8; 8];
+            chunk.copy_from_slice(&self.0[start..end]);
+            limbs[i] = u64::from_be_bytes(chunk);
+        }
+        limbs
+    }
+
+    fn from_u64_limbs(limbs: &[u64]) -> Self {
+        let mut bytes = [0u8; 32];
+        for i in 0..4 {
+            let chunk = limbs[i].to_be_bytes();
+            let start = 24 - (i * 8);
+            let end = 32 - (i * 8);
+            bytes[start..end].copy_from_slice(&chunk);
+        }
+        Self(bytes)
+    }
 }
+
 
 impl std::ops::Add for U256 {
     type Output = Self;
@@ -193,15 +274,34 @@ impl ArbSysHandler {
     }
 }
 
+
+//  Struct to hold the accounting parameters internally
+struct GasAccountingParams {
+    speed_limit_per_second: u64,
+    gas_pool_max: u64,
+    max_tx_gas_limit: u64,
+    amortized_cost_cap_bips: u64,
+}
+
+
 /// ArbGasInfo precompile handler (0x6C)
 pub struct ArbGasInfoHandler {
     address: Address,
+    accounting_params: GasAccountingParams, 
 }
+
+
 
 impl ArbGasInfoHandler {
     pub fn new() -> Self {
         Self {
             address: Address::from_hex("0x000000000000000000000000000000000000006c").unwrap(),
+            accounting_params: GasAccountingParams {
+                speed_limit_per_second: 120_000_000,
+                gas_pool_max: 32_000_000,
+                max_tx_gas_limit: 32_000_000,
+                amortized_cost_cap_bips: 10_000,
+            },
         }
     }
 }
@@ -220,81 +320,195 @@ impl PrecompileHandler for ArbGasInfoHandler {
             return Err(anyhow!("Input too short for function selector"));
         }
 
-        // Extract function selector (first 4 bytes)
         let selector = &input[0..4];
         let selector_hex = hex::encode(selector);
 
         match selector_hex.as_str() {
-            "c6f7de0e" => self.handle_get_current_tx_l1_gas_fees(input, config), // getCurrentTxL1GasFees()
-            "41b247a8" => self.handle_get_prices_in_wei(config),                 // getPricesInWei()
-            "f5d6ded7" => self.handle_get_l1_base_fee_estimate(config),         // getL1BaseFeeEstimate()
+            // --- Standard Getters ---
+            "c6f7de0e" => self.handle_get_current_tx_l1_gas_fees(input, config),
+            "41b247a8" => self.handle_get_prices_in_wei(config),
+            "f5d6ded7" => self.handle_get_l1_base_fee_estimate(config),
+            "02199f34" => self.handle_get_prices_in_arb_gas(config), 
+            "b246b565" => self.handle_get_l2_base_fee_estimate(config),
+            "055f362f" => self.handle_get_l1_gas_price_estimate(config),
+            "612af178" => self.handle_get_gas_accounting_params(),
+            "f918379a" => self.handle_get_minimum_gas_price(config),
+            "7a7d6beb" => self.handle_get_amortized_cost_cap_bips(),
+            "67037bec" => self.handle_get_l1_blob_base_fee_estimate(config),
+            "43a28b2e" => self.handle_get_prices_in_wei(config),   // getPricesInWeiWithAggregator
+            "12f78baa" => self.handle_get_prices_in_arb_gas(config), // getPricesInArbGasWithAggregator
+
             _ => Err(anyhow!("Unknown function selector: 0x{}", selector_hex)),
         }
     }
-
     fn gas_cost(&self, input: &[u8]) -> u64 {
-        // Base cost + cost per byte of calldata
-        8 + (input.len() as u64 * 16)
+        if input.len() < 4 { return 0; }
+        
+        let selector = hex::encode(&input[0..4]);
+        
+        match selector.as_str() {
+            "41b247a8" => 10, // getPricesInWei
+            "f5d6ded7" => 5,  // getL1BaseFeeEstimate
+            "02199f34" => 96, // getPricesInArbGas
+            "612af178" => 20, // getGasAccountingParams (returns 3 words)
+            "43a28b2e" => 20, // getPricesInWeiWithAggregator
+            "12f78baa" => 20, // getPricesInArbGasWithAggregator
+            
+            
+            "b246b565" | "055f362f" | "f918379a" | "7a7d6beb" | "67037bec" => 10,
+            
+            _ => 0,
+        }
     }
 }
 
 impl ArbGasInfoHandler {
     /// Handle getCurrentTxL1GasFees() call
+    ///  Uses compression heuristic (0-byte discount)
     fn handle_get_current_tx_l1_gas_fees(&self, input: &[u8], config: &ArbitrumConfig) -> Result<Vec<u8>> {
-        // Calculate L1 gas fees based on calldata size
-        let calldata_size = input.len();
-        let l1_gas_used = calldata_size as u64 * config.gas_price_components.l1_calldata_cost;
+        //  Analyze input for Zero vs Non-Zero bytes
+        let mut non_zero_bytes = 0u64;
+        let mut zero_bytes = 0u64;
+
+        for &byte in input {
+            if byte == 0 {
+                zero_bytes += 1;
+            } else {
+                non_zero_bytes += 1;
+            }
+        }
+
+        // Apply Heuristic Costing
+        // Cost per non-zero is standard L1 calldata cost (usually 16)
+        let cost_per_non_zero = config.gas_price_components.l1_calldata_cost; 
+        // Cost per zero is standard EVM (4 gas)
+        let cost_per_zero = 4u64;
+
+        let raw_gas = (non_zero_bytes * cost_per_non_zero) + (zero_bytes * cost_per_zero);
+
+        // Apply Compression Discount (0.9x)
+        // using integer math: (raw * 9) / 10
+        let l1_gas_used = (raw_gas * 9) / 10;
+        
         let l1_gas_fees = l1_gas_used * config.l1_base_fee;
 
         let fees = U256::from_u64(l1_gas_fees);
-        Ok(fees.to_big_endian())
+        Ok(fees.to_big_endian().to_vec())
     }
 
+    
     /// Handle getPricesInWei() call
     fn handle_get_prices_in_wei(&self, config: &ArbitrumConfig) -> Result<Vec<u8>> {
-        // Return 6-tuple: (Stub, Stub, L1BytePrice, L2BaseFee, Congestion, TotalL2)
-        let mut result = Vec::new();
+        // Return 6-tuple
+        let mut result = Vec::with_capacity(32 * 6);
 
-        // [0] Stub (Legacy L2 Tx) - Always 0
-        result.extend_from_slice(&[0u8; 32]);
+        // [0] Stub (Legacy L2 Tx)
+        let l2_base_fee = U256::from_u64(config.gas_price_components.l2_base_fee);
+        result.extend_from_slice(&self.encode_u256(l2_base_fee));
 
-        // [1] Stub (Legacy L1 Calldata) - Always 0
-        result.extend_from_slice(&[0u8; 32]);
+        // [1] Stub (Legacy L1 Calldata)
+        let l1_calldata_cost = U256::from_u64(config.gas_price_components.l1_calldata_cost);
+        result.extend_from_slice(&self.encode_u256(l1_calldata_cost));
 
         // [2] L1 Cost Per Byte (Calculated: L1BaseFee * 16)
         let l1_base_fee = U256::from_u64(config.l1_base_fee);
-        let l1_calldata_cost = U256::from_u64(config.gas_price_components.l1_calldata_cost);
         let l1_byte_price = l1_base_fee.saturating_mul(l1_calldata_cost);
-        
-        let mut l1_byte_price_bytes = [0u8; 32];
-        l1_byte_price.to_big_endian(&mut l1_byte_price_bytes);
-        result.extend_from_slice(&l1_byte_price_bytes);
+        result.extend_from_slice(&self.encode_u256(l1_byte_price));
 
         // [3] L2 Base Fee
-        let l2_base_fee = U256::from_u64(config.gas_price_components.l2_base_fee);
-        let mut l2_base_fee_bytes = [0u8; 32];
-        l2_base_fee.to_big_endian(&mut l2_base_fee_bytes);
-        result.extend_from_slice(&l2_base_fee_bytes);
+        result.extend_from_slice(&self.encode_u256(l2_base_fee));
 
         // [4] Congestion Fee
         let congestion_fee = U256::from_u64(config.gas_price_components.congestion_fee);
-        let mut congestion_fee_bytes = [0u8; 32];
-        congestion_fee.to_big_endian(&mut congestion_fee_bytes);
-        result.extend_from_slice(&congestion_fee_bytes);
+        result.extend_from_slice(&self.encode_u256(congestion_fee));
 
         // [5] Total L2 Fee (L2Base + Congestion)
         let total_l2 = l2_base_fee.saturating_add(congestion_fee);
-        let mut total_l2_bytes = [0u8; 32];
-        total_l2.to_big_endian(&mut total_l2_bytes);
-        result.extend_from_slice(&total_l2_bytes);
+        result.extend_from_slice(&self.encode_u256(total_l2));
 
         Ok(result)
     }
+
 
     /// Handle getL1BaseFeeEstimate() call
     fn handle_get_l1_base_fee_estimate(&self, config: &ArbitrumConfig) -> Result<Vec<u8>> {
         let l1_base_fee = U256::from_u64(config.l1_base_fee);
         Ok(l1_base_fee.to_big_endian())
+    }
+
+    
+    /// Handle getL1GasPriceEstimate()
+    fn handle_get_l1_gas_price_estimate(&self, config: &ArbitrumConfig) -> Result<Vec<u8>> {
+        let fee = U256::from_u64(config.l1_base_fee);
+        Ok(self.encode_u256(fee).to_vec())
+    }
+
+    /// Handle getMinimumGasPrice()
+    fn handle_get_minimum_gas_price(&self, config: &ArbitrumConfig) -> Result<Vec<u8>> {
+        let fee = U256::from_u64(config.gas_price_components.l2_base_fee);
+        Ok(self.encode_u256(fee).to_vec())
+    }
+
+    /// Handle getAmortizedCostCapBips()
+    fn handle_get_amortized_cost_cap_bips(&self) -> Result<Vec<u8>> {
+        let bips = U256::from_u64(self.accounting_params.amortized_cost_cap_bips);
+        Ok(self.encode_u256(bips).to_vec())
+    }
+
+    /// Handle getGasAccountingParams()
+    fn handle_get_gas_accounting_params(&self) -> Result<Vec<u8>> {
+        let mut result = Vec::with_capacity(32 * 3);
+        
+        let speed = U256::from_u64(self.accounting_params.speed_limit_per_second);
+        let pool = U256::from_u64(self.accounting_params.gas_pool_max);
+        let max_tx = U256::from_u64(self.accounting_params.max_tx_gas_limit);
+
+        result.extend_from_slice(&self.encode_u256(speed));
+        result.extend_from_slice(&self.encode_u256(pool));
+        result.extend_from_slice(&self.encode_u256(max_tx));
+
+        Ok(result)
+    }
+
+
+    /// Handle getPricesInArbGas()
+    fn handle_get_prices_in_arb_gas(&self, config: &ArbitrumConfig) -> Result<Vec<u8>> {
+        let mut result = Vec::with_capacity(32 * 3);
+        
+        let l2_base_fee = U256::from_u64(config.gas_price_components.l2_base_fee);
+        let l1_calldata_cost = U256::from_u64(config.gas_price_components.l1_calldata_cost);
+        let l1_storage_cost = U256::from_u64(config.gas_price_components.l1_storage_cost);
+
+        result.extend_from_slice(&self.encode_u256(l2_base_fee));
+        result.extend_from_slice(&self.encode_u256(l1_calldata_cost));
+        result.extend_from_slice(&self.encode_u256(l1_storage_cost));
+
+        Ok(result)
+    }
+
+    /// Handle getL1BlobBaseFeeEstimate()
+    fn handle_get_l1_blob_base_fee_estimate(&self, _config: &ArbitrumConfig) -> Result<Vec<u8>> {
+        // Return 1 wei (safe non-zero default) or config value if you have it
+        Ok(self.encode_u256(U256::from_u64(1)).to_vec())
+    }
+
+
+    ///  Handle getL2BaseFeeEstimate()
+    /// Returns the current L2 base fee (same as config value)
+    fn handle_get_l2_base_fee_estimate(&self, config: &ArbitrumConfig) -> Result<Vec<u8>> {
+        let fee = U256::from_u64(config.gas_price_components.l2_base_fee);
+        Ok(self.encode_u256(fee).to_vec())
+    }
+
+
+
+    // --- Helpers ---
+
+    fn encode_u256(&self, val: U256) -> [u8; 32] {
+        let mut bytes = [0u8; 32];
+        let vec_data = val.to_big_endian();
+        bytes.copy_from_slice(&vec_data);
+        bytes
     }
 }
 
