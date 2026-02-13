@@ -49,15 +49,22 @@ contract ArbitrumInfo {
 
 ### **ArbGasInfo (`0x000000000000000000000000000000000000006c`)**
 
-The **ArbGasInfo** precompile provides detailed information about gas scheduling and pricing on Arbitrum, including **L1 and L2 fee components**.
+The **ArbGasInfo** precompile provides detailed information about gas scheduling and pricing on Arbitrum, including **L1 and L2 fee components**, **accounting parameters**, and **EIP-4844 Blob pricing**.
 
 #### **Supported Functions**
 
-| Function                  | Selector      | Description                                               |
-| ------------------------- | ------------- | --------------------------------------------------------- |
-| `getCurrentTxL1GasFees()` | `0x4d2301cc`  | Returns the L1 gas fees paid for the current transaction. |
-| `getPricesInWei()`        | `0xa3b1b31d`  | Returns a 5-tuple of the core gas price components.       |
-| `getL1BaseFeeEstimate()`  | `0xb4d2301cc` | Returns the estimated L1 base fee in wei.                 |
+| Function | Selector | Description |
+| --- | --- | --- |
+| `getPricesInWei()` | `0x41b247a8` | Returns a 6-tuple of the core gas price components (L1/L2 fees, congestion). |
+| `getPricesInArbGas()` | `0x02199f34` | Returns gas prices in internal ArbGas units (3-tuple). |
+| `getL1BaseFeeEstimate()` | `0xf5d6ded7` | Returns the estimated L1 base fee in wei. |
+| `getL2BaseFeeEstimate()` | `0xb246b565` | Returns the current L2 base fee. |
+| `getL1GasPriceEstimate()` | `0x055f362f` | Returns the estimated L1 gas price. |
+| `getCurrentTxL1GasFees()` | `0xc6f7de0e` | Returns L1 gas fees for the current transaction (with compression heuristic). |
+| `getGasAccountingParams()` | `0x612af178` | Returns speed limit, gas pool max, and tx gas limit parameters. |
+| `getMinimumGasPrice()` | `0xf918379a` | Returns the minimum gas price (usually L2 base fee floor). |
+| `getAmortizedCostCapBips()` | `0x7a7d6beb` | Returns the amortized cost cap in basis points. |
+| `getL1BlobBaseFeeEstimate()` | `0x67037bec` | Returns the estimated L1 blob base fee (EIP-4844 support). |
 
 #### **Example Solidity Usage**
 
@@ -71,5 +78,11 @@ contract GasInfo {
         // This call will work in Anvil-Arbitrum
         return ARB_GAS_INFO.getL1BaseFeeEstimate();
     }
+    
+    function getBlobFee() public view returns (uint256) {
+         // This call will work (EIP-4844)
+         return ARB_GAS_INFO.getL1BlobBaseFeeEstimate();
+    }
 }
+
 ```
