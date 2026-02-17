@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "node16",
+    "module": "commonjs",
     "lib": ["ES2020"],
     "declaration": true,
     "outDir": "./dist",
@@ -11,13 +11,19 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node16",
+    "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "baseUrl": ".", 
+    "paths": {
+      "hardhat/config": ["node_modules/hardhat/dist/src/config.d.ts"],
+      "hardhat/plugins": ["node_modules/hardhat/dist/src/plugins.d.ts"],
+      "hardhat/types": ["node_modules/hardhat/dist/src/types/index.d.ts"],
+      "hardhat/types/*": ["node_modules/hardhat/dist/src/types/*"],
+      "hardhat/builtin-tasks/*": ["node_modules/hardhat/dist/src/builtin-tasks/*"]
+    }
   },
   "include": ["**/*.ts"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }
-
-
