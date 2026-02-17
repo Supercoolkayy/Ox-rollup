@@ -31,8 +31,21 @@ npx hardhat arb:reseed-shims --network localhost --stylus --cache-ttl 600
 **Expected Output:**
 
 ```
-ℹ️ fetched from Stylus: [...]
-✅ Re-seeded getPricesInWei -> [...]
+=== Arbitrum Shim Reseeder ===
+   [RPC] Fetched Wei Prices from Stylus.
+   [RPC] Fetched ArbGas Prices from Stylus.
+   > Processing updates...
+   [Success] Wei Prices Updated:
+      - Per L2 Tx      : 88946706240
+      - Per L1 Call    : 635333616
+      - Per Storage    : 400000000000
+      - ArbGas Base    : 20000000
+      - Congestion     : 0
+      - Total          : 20000000
+   [Success] ArbGas Prices Updated: [4446, 31, 20000]
+   [Success] Nitro Scalars Updated
+   [Success] Constraints Updated (6 items)
+
 ```
 
 **Second Run (Cache Hit):**
@@ -45,8 +58,19 @@ npx hardhat arb:reseed-shims --network localhost --stylus --cache-ttl 600
 **Expected Output:**
 
 ```
-ℹ️ using Stylus file cache: [...]
-✅ Re-seeded getPricesInWei -> [...]
+=== Arbitrum Shim Reseeder ===
+   [Cache] Loaded data from Stylus file.
+   > Processing updates...
+   [Success] Wei Prices Updated:
+      - Per L2 Tx      : 88946706240
+      - Per L1 Call    : 635333616
+      - Per Storage    : 400000000000
+      - ArbGas Base    : 20000000
+      - Congestion     : 0
+      - Total          : 20000000
+   [Success] ArbGas Prices Updated: [4446, 31, 20000]
+   [Success] Nitro Scalars Updated
+   [Success] Constraints Updated (6 items)
 ```
 
 ---

@@ -1,32 +1,34 @@
 {
   "arbSysChainId": 42161,
-   "runtime": "stylus",
+  "runtime": "stylus",
   
   "gas": {
-    "pricesInWei": ["69440","1","2000000000000","100000000","0","1"]
+    "pricesInWei": ["69440","1","2000000000000","100000000","0","1"],
+    
+    "pricesInArbGas": ["91", "0", "20000"],
+
+    "nitro": {
+      "l1BaseFeeEstimate": "0",
+      "minimumGasPrice": "100000000",
+      
+      "accounting": {
+        "speedLimitPerSecond": "100000000",
+        "gasPoolMax": "0",
+        "maxBlockGasLimit": "32000000",
+        "maxTxGasLimit": "32000000"
+      },
+
+      "constraints": [
+        {
+          "targetPerSecond": "100000000",
+          "adjustmentWindow": "86400",
+          "backlog": "0"
+        }
+      ]
+    }
   },
+
   "seedFromNitro": true,
   "nitroRpc": "http://127.0.0.1:8547",
-   "stylusRpc": "https://sepolia-rollup.arbitrum.io/rpc"
+  "stylusRpc": "https://sepolia-rollup.arbitrum.io/rpc"
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -86,12 +86,21 @@ npx hardhat --config hardhat.config.js arb:reseed-shims --network localhost --st
 Possible output:
 
 ```
-ℹ️ fetched from Stylus: [
-  '26440960', '188864', '2000000000000', '100000000', '0', '100000000'
-]
-✅ Re-seeded getPricesInWei -> [
-  '26440960', '188864', '2000000000000', '100000000', '0', '100000000'
-]
+=== Arbitrum Shim Reseeder ===
+   [RPC] Fetched Wei Prices from Stylus.
+   [RPC] Fetched ArbGas Prices from Stylus.
+   > Processing updates...
+   [Success] Wei Prices Updated:
+      - Per L2 Tx      : 86789261440
+      - Per L1 Call    : 619923296
+      - Per Storage    : 401480000000
+      - ArbGas Base    : 20000000
+      - Congestion     : 74000
+      - Total          : 20074000
+   [Success] ArbGas Prices Updated: [4317, 30, 20000]
+   [Success] Nitro Scalars Updated
+   [Success] Constraints Updated (6 items)
+
 ```
 
 **Fallback to config (no RPC reachable)**
@@ -103,8 +112,20 @@ npx hardhat --config hardhat.config.js arb:reseed-shims --network localhost
 Output:
 
 ```
-ℹ️ using JSON/config (shim order): [ '69440','496','2000000000000','100000000','0','100000000' ]
-✅ Re-seeded getPricesInWei -> [ '69440','496','2000000000000','100000000','0','100000000' ]
+=== Arbitrum Shim Reseeder ===
+   [Config] Using JSON for Wei Prices.
+   [Config] Using JSON for ArbGas Prices.
+   > Processing updates...
+   [Success] Wei Prices Updated:
+      - Per L2 Tx      : 69440
+      - Per L1 Call    : 1
+      - Per Storage    : 2000000000000
+      - ArbGas Base    : 100000000
+      - Congestion     : 0
+      - Total          : 1
+   [Success] ArbGas Prices Updated: [91, 0, 20000]
+   [Success] Nitro Scalars Updated
+   [Success] Constraints Updated (1 items)
 ```
 
 **Nitro compatibility (optional)**

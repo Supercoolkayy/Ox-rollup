@@ -64,12 +64,39 @@ npx hardhat --config hardhat.config.js arb:gas-info --network localhost --stylus
 Expected style of output:
 
 ```
-Local tuple     : [ '69440', '496', '2000000000000', '100000000', '0', '100000000' ]
-Remote tuple    : [ '...', '...', '...', '...', '...', '...' ] (https://arb1.arbitrum.io/rpc)
-Index-by-index  :
-  [0] 69440 != ...
-  [1] 496   != ...
-  ...
+Arbitrum Precompile State Comparison
+Remote RPC: https://sepolia-rollup.arbitrum.io/rpc
+
+ Property                  | Local                | Remote               | Status
+ --------------------------+----------------------+----------------------+------
+ Per L2 Tx (Stub)          | 88946706240          | 86789261440          | DIFF
+ Per L1 Calldata (Stub)    | 635333616            | 619923296            | DIFF
+ Per Storage (L1 Cost)     | 400000000000         | 404960000000         | DIFF
+ Per ArbGas Base           | 20000000             | 20000000             | OK
+ Per ArbGas Congestion     | 0                    | 248000               | DIFF
+ Per ArbGas Total          | 20000000             | 20248000             | DIFF
+ --------------------------+----------------------+----------------------+------
+ ArbGas Per L2 Tx          | 4446                 | 4339                 | DIFF
+ ArbGas Per L1 Call        | 31                   | 30                   | DIFF
+ ArbGas Per Storage        | 20000                | 20000                | OK
+ --------------------------+----------------------+----------------------+------
+ l1BaseFeeEstimate         | 0                    | 38745206             | DIFF
+ minimumGasPrice           | 100000000            | 20000000             | DIFF
+ speedLimitPerSecond       | 100000000            | 7000000              | DIFF
+ gasPoolMax                | 32000000             | 32000000             | OK
+ maxBlockGasLimit          | 32000000             | 32000000             | OK
+ maxTxGasLimit             | 32000000             | 32000000             | OK
+ --------------------------+----------------------+----------------------+------
+ Pricing Constraints       | 6 active             | 6 active             | OK
+
+Local Constraints Details:
+  [0] Target: 60000000, Window: 9, Backlog: 127475
+  [1] Target: 41000000, Window: 52, Backlog: 127475
+  [2] Target: 29000000, Window: 329, Backlog: 127475
+  [3] Target: 20000000, Window: 2105, Backlog: 127475
+  [4] Target: 14000000, Window: 13485, Backlog: 127475
+  [5] Target: 10000000, Window: 86400, Backlog: 127475
+
 ```
 
 This step performs **only** `eth_call` against `STYLUS_RPC` and **does not** modify local shims.

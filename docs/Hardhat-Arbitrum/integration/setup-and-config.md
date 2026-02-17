@@ -155,8 +155,23 @@ npx hardhat --config hardhat.config.js run scripts/install-and-check-shims.js
 Expected example:
 
 ```
-getPricesInWei(): [ '69440', '496', '2000000000000', '100000000', '0', '100000000' ]
-✅ shims installed, seeded, and verified in one run.
+
+Arbitrum Precompile Installer & Verifier
+Target Address: 0x000000000000000000000000000000000000006c
+
+   [1/4] Compiling contracts... Nothing to compile
+Done.
+   [2/4] Installing bytecode (4091 bytes)... Done.
+   [3/4] Seeding default configuration...
+
+   [4/4] Verifying State:
+   Parameter            | Actual          | Expected        | Status
+   ---------------------+-----------------+-----------------+-------
+   Wei: Per L2 Tx       | 1843139200      | 1843139200      | OK
+   Wei: Per L1 Call     | 13165280        | 13165280        | OK
+   Arb: Per L2 Tx       | 91              | 91              | OK
+   Arb: Per Storage     | 20000           | 20000           | OK
+
 ```
 
 Tasks auto-loaded by the plugin can also be used:
@@ -212,21 +227,39 @@ Examples:
 **Success**
 
 ```
-ℹ️ fetched from Stylus: [
-  '26440960','188864','2000000000000','100000000','0','100000000'
-]
-✅ Re-seeded getPricesInWei -> [
-  '26440960','188864','2000000000000','100000000','0','100000000'
-]
+=== Arbitrum Shim Reseeder ===
+   [RPC] Fetched Wei Prices from Stylus.
+   [RPC] Fetched ArbGas Prices from Stylus.
+   > Processing updates...
+   [Success] Wei Prices Updated:
+      - Per L2 Tx      : 88946706240
+      - Per L1 Call    : 635333616
+      - Per Storage    : 400000000000
+      - ArbGas Base    : 20000000
+      - Congestion     : 0
+      - Total          : 20000000
+   [Success] ArbGas Prices Updated: [4446, 31, 20000]
+   [Success] Nitro Scalars Updated
+   [Success] Constraints Updated (6 items)
 ```
 
 **Temporary failure (fallback)**
 
 ```
-⚠️  RPC fetch failed (https://sepolia-rollup.arbitrum.io/rpc): fetch failed
-ℹ️ Stylus/Nitro RPC unavailable; will try other sources.
-ℹ️ using JSON/config (shim order): [ '69440','496','2000000000000','100000000','0','100000000' ]
-✅ Re-seeded getPricesInWei -> [ '69440','496','2000000000000','100000000','0','100000000' ]
+=== Arbitrum Shim Reseeder ===
+   [Config] Using JSON for Wei Prices.
+   [Config] Using JSON for ArbGas Prices.
+   > Processing updates...
+   [Success] Wei Prices Updated:
+      - Per L2 Tx      : 69440
+      - Per L1 Call    : 1
+      - Per Storage    : 2000000000000
+      - ArbGas Base    : 100000000
+      - Congestion     : 0
+      - Total          : 1
+   [Success] ArbGas Prices Updated: [91, 0, 20000]
+   [Success] Nitro Scalars Updated
+   [Success] Constraints Updated (1 items)
 ```
 
 ###  Source priority (reseeding)

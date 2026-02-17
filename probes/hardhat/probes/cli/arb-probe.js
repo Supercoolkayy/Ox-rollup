@@ -92,7 +92,7 @@ const program = new Command();
 
 program.name("arb-probe").description("Small CLI to exercise gas info and ERC deployments").version("0.1.0");
 
-// gasinfo compare (unchanged logic)
+// gasinfo compare 
 const gas = program.command("gasinfo").description("Gas info utilities");
 gas
   .command("compare")

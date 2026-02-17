@@ -16,3 +16,4 @@
 ### Changed
 - Refactored `ArbGasInfoShim` to strictly adhere to the official One precompile specification, ensuring `uint256` return types are used where expected.
 - Consolidated precompile compliance fixes into a single major patch (PR #8).
+
