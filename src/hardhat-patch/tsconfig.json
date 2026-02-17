@@ -7,7 +7,6 @@
     "outDir": "./dist",
     "rootDir": "./",
     "strict": true,
-    "noImplicitAny": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
@@ -15,23 +14,7 @@
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "baseUrl": ".",
-    "paths": {
-      "hardhat/config": [
-        "../../node_modules/hardhat/dist/src/config.d.ts",
-        "../../node_modules/hardhat/dist/src/internal/core/config/config-env.d.ts"
-      ],
-      "hardhat/plugins": ["../../node_modules/hardhat/dist/src/plugins.d.ts"],
-      "hardhat/types": [
-        "../../node_modules/hardhat/dist/src/types/index.d.ts",
-        "../../node_modules/hardhat/dist/src/types/config.d.ts",
-        "../../node_modules/hardhat/dist/src/types/runtime.d.ts"
-      ],
-      "hardhat/types/config": ["../../node_modules/hardhat/dist/src/types/config.d.ts"],
-      "hardhat/types/runtime": ["../../node_modules/hardhat/dist/src/types/runtime.d.ts"],
-      "hardhat/builtin-tasks/*": ["../../node_modules/hardhat/dist/src/builtin-tasks/*"]
-    }
+    "emitDecoratorMetadata": true
   },
   "include": ["**/*.ts"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
