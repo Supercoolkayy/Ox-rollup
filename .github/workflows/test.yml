@@ -123,6 +123,11 @@ jobs:
         
     - name: Run Hardhat integration validation
       run: |
+       
+        cd src/hardhat-patch
+        npm ci
+        npm run build
+        cd ../..
         cd probes/hardhat
         npm ci
         npx hardhat run scripts/validate-precompiles.js > ../../tests/logs/ci-hardhat-validation.log 2>&1 || true
@@ -164,4 +169,5 @@ jobs:
       with:
         name: golden-test-logs
         path: tests/logs/ci-golden-tests.log
+
         retention-days: 30
